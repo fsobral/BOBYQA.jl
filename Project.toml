@@ -1,0 +1,4 @@
+name = "BOBYQA"
+uuid = "72c7d756-3f17-4f0f-b43c-101222e85311"
+authors = ["Francisco N. C. Sobral <fsobral@uem.br>"]
+version = "0.1.0"
