@@ -1,5 +1,7 @@
-module BOBYQA
+# Main file implementing BOBYQA algorithm in pure Julia
 
-greet() = print("Hello World!")
+module bobyqa
 
-end # module
+# Main module
+
+end
