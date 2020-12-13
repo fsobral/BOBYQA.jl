@@ -47,7 +47,7 @@ function tcg_active_set(gk, Gk, xk, Δ, a, b)
 
         α, index_α, index = calculate_alpha(gk, Gk, xk, d, s, Δ, a, b)
 
-        d .= d .+ α[1] .* s
+        d .= d .+ α .* s
 
         mul!(aux_vector_1, Gk, d)
         aux_vector_1 .+= gk 
