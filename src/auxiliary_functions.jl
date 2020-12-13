@@ -66,14 +66,24 @@ end
 
 """
 function alpha_Delta(d, s, Δ)
-    ds = dot(d, s)
-    ss = dot(s, s)
-    dd = dot(d, d)
+    n = length(xk)
+    α = Inf
+    α_i = 0.0
 
-    r_1 = (ds - sign(ds) * sqrt(ds ^ 2.0 - ss * (dd - Δ ^ 2.0)) ) / ss
-    r_2 = (dd - Δ ^ 2.0) / (r_1 * ss)
+    for i=1:n
+        if s[i] > 0.0
+            α_i = (Δ - d[i]) / s[i]
+        elseif s[i] < 0.0
+            α_i = (-Δ - d[i]) / s[i]
+        else
+            α_i = Inf
+        end
+        if α_i < α
+            α = α_i
+        end
+    end
 
-    return max(r_1, r_2)
+    return α
 
 end
 
