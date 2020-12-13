@@ -84,10 +84,12 @@ function tcg_active_set(gk, Gk, xk, Δ, a, b)
 
         # α_Q is chosen
         if index_α == 3
-            aux_vector_3 .= projection_active_set(gk, I)
-            aux_3 = dot(aux_vector_3, aux_vector_3)
+            aux_vector_3 .= d - α * s
+            aux_3 = dot(aux_vector_3, Gk * aux_vector_3)
+            aux_5 = dot(d, Gk * d)
+            aux_6 = - α * dot(s, gk)
 
-            if (sqrt(aux_1) * Δ + 1.0e-2 * aux_2 <= 0.0) || (sqrt(aux_1) - sqrt(aux_3) + 1.0e-2 * aux_2 <= 0.0)
+            if (sqrt(aux_1) * Δ + 1.0e-2 * aux_2 <= 0.0) || (aux_6 + aux_3 - aux_5 + 1.0e-2 * aux_2 <= 0.0)
                 return d
             else
                 #Ver
