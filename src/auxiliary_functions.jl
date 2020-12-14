@@ -174,8 +174,8 @@ end
     - 'a': n-dimensional vector with the lower bounds
     - 'b': n-dimensional vector with the upper bounds    
     
-    Returns the real value α, an index that indicates which value was chosen, and the index
-    for which the bound is achieved (in the case α = α_B) or 0 for the other cases
+    Returns the real value α, an index that indicates which value was chosen, and a list 
+    of indexes that violate the bound restrictions (in the case α = α_B) or an empty list for the other cases
 
 """
 function calculate_alpha(gk, Gk, xk, d, s, Δ, a, b)
@@ -185,7 +185,7 @@ function calculate_alpha(gk, Gk, xk, d, s, Δ, a, b)
     v[3] = alpha_Q(gk, Gk, d, s)
     values = findmin(v)
     if values[2] != 2
-        index = 0
+        index = []
     end
 
     return values[1], values[2], index
