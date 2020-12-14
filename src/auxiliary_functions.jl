@@ -259,9 +259,24 @@ function theta_B(xk, d, proj_d, s, a, b)
     end
 
     return θ, d_θ
-    
+
 end
 
+"""
+
+    theta_Q(gk, Gk, d, proj_d, s)
+
+    Determines which is the largest value of θ such that Q(xk + d(θ)) decreases monotonically
+
+    - 'gk': n-dimensional vector (gradient of the model calculated in xk)
+    - 'Gk': n × n matrix (hessian of the model calculated in xk) 
+    - 'd': n-dimensional vector (direction)
+    - 'proj_d': n-dimensional vector (projection of the direction d) 
+    - 's': n-dimensional vector (new search-direction)  
+    
+    Returns the real value θ (an angle), and a n-dimensional vector d(θ)
+
+"""
 function theta_Q(gk, Gk, d, proj_d, s)
     dGp = dot(d, Gk * proj_d)
     dGs = dot(d, Gk * s)
@@ -281,6 +296,8 @@ function theta_Q(gk, Gk, d, proj_d, s)
         end
     end
 
-    return θ
+    d_θ = d - proj_d + cos(θ) * proj_d + sin(θ) * s
+
+    return θ, d_θ
 
 end
