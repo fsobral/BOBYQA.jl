@@ -337,13 +337,13 @@ end
 
 """
 function calculate_theta(gk, Gk, xk, d, proj_d, s, a, b)
-    θ_B, dθ_B = theta_B(xk, d, proj_d, s, a, b)
-    θ_Q, dθ_Q = theta_Q(gk, Gk, d, proj_d, s)
+    θ_B, dθ_B, listθ_B = theta_B(xk, d, proj_d, s, a, b)
+    θ_Q, dθ_Q, listθ_Q = theta_Q(gk, Gk, xk, d, proj_d, s, a, b)
 
     if min(θ_B, θ_Q) == θ_B
-        return dθ_B
+        return dθ_B, listθ_B
     else
-        return dθ_Q
+        return dθ_Q, listθ_Q
     end
     
 end
