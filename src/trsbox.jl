@@ -35,6 +35,7 @@ function tcg_active_set(gk, Gk, xk, Δ, a, b)
     aux_vector_2 = zeros(n)
     aux_vector_3 = zeros(n)
     aux_vector_4 = zeros(n)
+    d_old = zeros(n)
 
     I = active_set(gk, xk, a, b)
     d = zeros(n)
@@ -46,7 +47,7 @@ function tcg_active_set(gk, Gk, xk, Δ, a, b)
             return d
         end
 
-        α, index_α, index = calculate_alpha(gk, Gk, xk, d, s, Δ, a, b)
+        α, index_α, indexes = calculate_alpha(gk, Gk, xk, d, s, Δ, a, b)
 
         d .= d .+ α .* s
 
@@ -58,21 +59,33 @@ function tcg_active_set(gk, Gk, xk, Δ, a, b)
         
         # α_Delta is chosen
         if index_α == 1
-            aux_vector_4 .= projection_active_set(d, I)
-            aux_4 = dot(aux_vector_4, aux_vector_4)
+            while true
+                aux_vector_4 .= projection_active_set(d, I)
+                aux_4 = dot(aux_vector_4, aux_vector_4)
             
-            if aux_4 * aux_1 - dot(aux_vector_4, aux_vector_2) ^ 2.0 + 1.0e-4 * aux_2 <= 0.0
-                return d
-            else
-                s .= new_search_direction(aux_vector_4, aux_vector_2)
-                #Ver
-            end
+                if aux_4 * aux_1 - dot(aux_vector_4, aux_vector_2) ^ 2.0 + 1.0e-4 * aux_2 <= 0.0
+                    return d
+                else
+                    d_old .= d
+                    s .= new_search_direction(aux_vector_4, aux_vector_2)
+                    d, indexes, value = calculate_theta(gk, Gk, xk, d, aux_vector_4, s, a, b)
+                    push!(I, indexes)
 
+                    if value == true
+                        doGdo = dot(d_old, Gk * d_old)
+                        dGd = dot(d, Gk * d)
+                        dogk = dot(d_old, gk)
+                        if (dogk + 0.5 * doGdo - dot(d, gk) - 0.5 * dGd + 1.0e-2 * (dogk + 0.5 * doGdo)) <= 0.0
+                            return d
+                        end
+                    end
+                end
+            end          
         end
 
         # α_B is chosen
         if index_α == 2
-            push!(I, index)
+            push!(I, indexes)
             
             if sqrt(aux_1) * Δ + 1.0e-2 * aux_2 <= 0.0
                 return d
@@ -112,6 +125,6 @@ function tcg_active_set(gk, Gk, xk, Δ, a, b)
     end
 
     return d
-    
+
 end
 
