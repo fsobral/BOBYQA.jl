@@ -59,3 +59,29 @@ function correct_initial_guess(x0, Δ, a, b)
     return x
 
 end
+
+function initial_set(x0, Δ, a, b, m)
+    n = length(x0)
+    set = zeros(n, m)
+    set[:, 1] = x0
+    
+    for i=1:n
+        if x0[i] == a[i]
+            set[:, i+1] = x0
+            set[i, i+1] += Δ
+            set[:, n + i + 1] = x0
+            set[i, n + i + 1] += 2.0 * Δ
+        elseif x0[i] == b[i]
+            set[:, i+1] = x0
+            set[i, i+1] += -Δ
+            set[:, n + i + 1] = x0
+            set[i, n + i + 1] += -2.0 * Δ
+        else
+            set[:, i+1] = x0
+            set[i, i+1] += Δ
+            set[:, n + i + 1] = x0
+            set[i, n + i + 1] += -Δ
+        end
+    end
+
+end
