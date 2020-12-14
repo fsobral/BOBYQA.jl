@@ -224,3 +224,39 @@ function new_search_direction(proj_d, proj_grad)
     return α * proj_d + β * proj_grad
     
 end
+
+"""
+
+    theta_B(xk, d, proj_d, s, a, b)
+
+    Determines which is the largest value of θ such that xk + d(θ) satisfies the bounds
+
+    - 'xk': n-dimensional vector (current iterate) 
+    - 'd': n-dimensional vector (direction)
+    - 'proj_d': n-dimensional vector (projection of the direction d) 
+    - 's': n-dimensional vector (new search-direction)
+    - 'a': n-dimensional vector with the lower bounds
+    - 'b': n-dimensional vector with the upper bounds    
+    
+    Returns the real value θ (an angle), and a n-dimensional vector d(θ)
+
+"""
+function theta_B(xk, d, proj_d, s, a, b)
+    θ = pi / 4
+    n = length(xk)
+    l = a - xk
+    u = b - xk
+    d_θ = zeros(n)
+    
+    while true
+        d_θ .= d .- proj_d .+ cos(θ) .* proj_d .+ sin(θ) .* s
+        for i = 1:n
+            if (l[i] > d_θ[i]) || (u[i] < d_θ[i])
+               θ *= 0.9
+               continue
+            end
+        end
+        return θ, d_θ
+    end
+
+end
