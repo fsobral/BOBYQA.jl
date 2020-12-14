@@ -270,26 +270,30 @@ end
 
 """
 
-    theta_Q(gk, Gk, d, proj_d, s)
+    theta_Q(gk, Gk, xk, d, proj_d, s, a, b)
 
     Determines which is the largest value of θ such that Q(xk + d(θ)) decreases monotonically
 
     - 'gk': n-dimensional vector (gradient of the model calculated in xk)
-    - 'Gk': n × n matrix (hessian of the model calculated in xk) 
+    - 'Gk': n × n matrix (hessian of the model calculated in xk)
+    - 'xk': n-dimensional vector (current iterate) 
     - 'd': n-dimensional vector (direction)
     - 'proj_d': n-dimensional vector (projection of the direction d) 
-    - 's': n-dimensional vector (new search-direction)  
+    - 's': n-dimensional vector (new search-direction)
+    - 'a': n-dimensional vector with the lower bounds
+    - 'b': n-dimensional vector with the upper bounds   
     
-    Returns the real value θ (an angle), and a n-dimensional vector d(θ)
+    Returns the real value θ (an angle), a n-dimensional vector d(θ), and a list of indexes that violate the bound restrictions
 
 """
-function theta_Q(gk, Gk, d, proj_d, s)
+function theta_Q(gk, Gk, xk, d, proj_d, s, a, b)
     dGp = dot(d, Gk * proj_d)
     dGs = dot(d, Gk * s)
     sGs = dot(s, Gk * s)
     sGp = dot(s, Gk * proj_d)
     pGp = dot(proj_d, Gk * proj_d)
     θ = pi / 4
+    index_list = []
 
     while true
         sin_θ = sin(θ)
@@ -304,7 +308,13 @@ function theta_Q(gk, Gk, d, proj_d, s)
 
     d_θ = d - proj_d + sin_θ * proj_d + cos_θ * s
 
-    return θ, d_θ
+    for i = 1:n
+        if ((a[i] - x[i]) == d_θ[i]) || ((b[i] - x[i]) == d_θ[i])
+            push!(index_list, i)
+        end
+    end
+
+    return θ, d_θ, index_list
 
 end
 
