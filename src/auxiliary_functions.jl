@@ -256,7 +256,31 @@ function theta_B(xk, d, proj_d, s, a, b)
                continue
             end
         end
-        return θ, d_θ
     end
+
+    return θ, d_θ
+    
+end
+
+function theta_Q(gk, Gk, d, proj_d, s)
+    dGp = dot(d, Gk * proj_d)
+    dGs = dot(d, Gk * s)
+    sGs = dot(s, Gk * s)
+    sGp = dot(s, Gk * proj_d)
+    pGp = dot(proj_d, Gk * proj_d)
+    θ = pi / 4
+
+    while true
+        sin_θ = sin(θ)
+        cos_θ = cos(θ)
+        aux = - sin_θ * dGp + cos_θ * dGs - sin_θ * cos_θ * sGs - sin_θ * ( cos_θ - 1.0 ) * pGp + ( - sin_θ ^ 2.0 + cos_θ ^ 2.0 - cos_θ) * sGp
+
+        if aux >= 0.0
+            θ *= 0.9
+            continue
+        end
+    end
+
+    return θ
 
 end
