@@ -337,7 +337,7 @@ end
     - 'a': n-dimensional vector with the lower bounds
     - 'b': n-dimensional vector with the upper bounds    
     
-    Returns a n-dimensional vector d(θ)
+    Returns a n-dimensional vector d(θ), a list of indexes that violate the bound restrictions, and a boolean (true if θ = θ_Q or false otherwise)
 
 """
 function calculate_theta(gk, Gk, xk, d, proj_d, s, a, b)
@@ -345,9 +345,9 @@ function calculate_theta(gk, Gk, xk, d, proj_d, s, a, b)
     θ_Q, dθ_Q, listθ_Q = theta_Q(gk, Gk, xk, d, proj_d, s, a, b)
 
     if min(θ_B, θ_Q) == θ_B
-        return dθ_B, listθ_B
+        return dθ_B, listθ_B, false
     else
-        return dθ_Q, listθ_Q
+        return dθ_Q, listθ_Q, true
     end
     
 end
