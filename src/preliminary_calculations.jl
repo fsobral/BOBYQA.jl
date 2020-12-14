@@ -26,3 +26,36 @@ function check_initial_room(Δ, a, b)
 
 end
 
+"""
+
+    correct_initial_guess(x0, Δ, a, b)
+
+    Checks whether the limits satisfy the conditions b[i] >= a[i]+2*Δ
+
+    - 'x0': n-dimensional vector (first iterate)
+    - 'Δ': positive real value (trust-region radius)
+    - 'a': n-dimensional vector with the lower bounds
+    - 'b': n-dimensional vector with the upper bounds
+
+    Returns a n-dimensional vector
+
+"""
+function correct_initial_guess(x0, Δ, a, b)
+    n = length(x0)
+    x = copy(x0)
+
+    for i = 1:n
+        if x0[i] < a[i]
+            x[i] = a[i]
+        elseif x0[i] > b[i]
+            x[i] = b[i]
+        elseif (a[i] < x0[i]) && (x0[i] < a[i] + Δ)
+            x[i] = a[i] + Δ
+        elseif (b[i] - Δ < x0[i]) && (x0[i] < b[i])
+            x[i] = b[i] - Δ
+        end
+    end
+
+    return x
+
+end
