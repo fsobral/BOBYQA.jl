@@ -23,7 +23,8 @@ include("auxiliary_functions.jl")
 """
 function tcg_active_set(gk, Gk, xk, Δ, a, b)
     n = length(xk)
-    α = 0.0 
+    α = 0.0
+    β = 0.0
     index_α = 0 
     index = 0
     aux_1 = 0.0
@@ -92,13 +93,25 @@ function tcg_active_set(gk, Gk, xk, Δ, a, b)
             if (sqrt(aux_1) * Δ + 1.0e-2 * aux_2 <= 0.0) || (aux_6 + aux_3 - aux_5 + 1.0e-2 * aux_2 <= 0.0)
                 return d
             else
-                #Ver
+                mul!(aux_vector_5, Gk, s)
+                aux_vector_5 *= - α
+                mul!(aux_vector_6, Gk, d - \alpha * s)
+                aux_vector_6 .+= gk
+                aux_vector_7 = projection_active_set(aux_vector_6)
+                β = - dot(aux_vector_5, aux_vector_7) / dot(aux_vector_5, s)
+                mul!(aux_vector_8, Gk, d)
+                aux_vector_8 .+= gk
+                if β * dot(s, aux_vector_8) < 0.0
+                    s .*= β
+                else
+                    s .*= -β
+                    continue
+                end
             end
-
         end
-
     end
 
     return d
+    
 end
 
