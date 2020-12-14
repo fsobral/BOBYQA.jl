@@ -296,8 +296,38 @@ function theta_Q(gk, Gk, d, proj_d, s)
         end
     end
 
-    d_θ = d - proj_d + cos(θ) * proj_d + sin(θ) * s
+    d_θ = d - proj_d + sin_θ * proj_d + cos_θ * s
 
     return θ, d_θ
 
+end
+
+"""
+
+    calculate_theta(gk, Gk, xk, d, proj_d, s, a, b)
+
+    Determines the direction d_θ, which will be defined by the minimum value between θ_B and θ_Q
+
+    - 'gk': n-dimensional vector (gradient of the model calculated in xk)
+    - 'Gk': n × n matrix (hessian of the model calculated in xk)
+    - 'xk': n-dimensional vector (current iterate) 
+    - 'd': n-dimensional vector (direction)
+    - 'proj_d': n-dimensional vector (projection of the direction d)
+    - 's': n-dimensional vector (new search-direction)
+    - 'a': n-dimensional vector with the lower bounds
+    - 'b': n-dimensional vector with the upper bounds    
+    
+    Returns a n-dimensional vector d(θ)
+
+"""
+function calculate_theta(gk, Gk, xk, d, proj_d, s, a, b)
+    θ_B, dθ_B = theta_B(xk, d, proj_d, s, a, b)
+    θ_Q, dθ_Q = theta_Q(gk, Gk, d, proj_d, s)
+
+    if min(θ_B, θ_Q) == θ_B
+        return dθ_B
+    else
+        return dθ_Q
+    end
+    
 end
