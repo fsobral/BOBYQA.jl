@@ -238,7 +238,7 @@ end
     - 'a': n-dimensional vector with the lower bounds
     - 'b': n-dimensional vector with the upper bounds    
     
-    Returns the real value θ (an angle), and a n-dimensional vector d(θ)
+    Returns the real value θ (an angle), a n-dimensional vector d(θ), and a list of indexes that violate the bound restrictions
 
 """
 function theta_B(xk, d, proj_d, s, a, b)
@@ -247,6 +247,7 @@ function theta_B(xk, d, proj_d, s, a, b)
     l = a - xk
     u = b - xk
     d_θ = zeros(n)
+    index_list = []
     
     while true
         d_θ .= d .- proj_d .+ cos(θ) .* proj_d .+ sin(θ) .* s
@@ -257,8 +258,13 @@ function theta_B(xk, d, proj_d, s, a, b)
             end
         end
     end
+    for i = 1:n
+        if (l[i] == d_θ[i]) || (u[i] == d_θ[i])
+            push!(index_list, i)
+        end
+    end
 
-    return θ, d_θ
+    return θ, d_θ, index_list
 
 end
 
