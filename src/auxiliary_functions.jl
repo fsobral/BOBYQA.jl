@@ -99,14 +99,14 @@ end
     - 'a': n-dimensional vector with the lower bounds
     - 'b': n-dimensional vector with the upper bounds
 
-    Returns the real value α_B and the index for which the bound is achieved
+    Returns the real value α_B, and a list of indexes that violate the bound restrictions
 
 """
 function alpha_B(xk, d, s, a, b)
     n = length(xk)
     α = Inf
     α_i = 0.0
-    index = 0
+    index_list = []
 
     for i=1:n
         if s[i] > 0.0
@@ -118,11 +118,15 @@ function alpha_B(xk, d, s, a, b)
         end
         if α_i < α
             α = α_i
-            index = i
+        end
+    end
+    for i = 1:n
+        if ((a[i] - x[i] - d[i]) == α * s[i]) || ((b[i] - x[i] - d[i]) == α * s[i])
+            push!(index_list, i)
         end
     end
 
-    return α, index
+    return α, index_list
 
 end
 
