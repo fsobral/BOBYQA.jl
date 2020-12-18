@@ -153,9 +153,10 @@ end
 
     initial_set(f, x0, Δ, a, b, m)
 
-    Builds the set of interpolation points of the first model,
-    compute the function values in these points and some important constants
-    relative to the interpolation points
+    Constructs the set of interpolation points of the first model,
+    calculates the function values at these points, some important
+    constants related to the interpolation points and the values
+    of p(j) and q(j)
     
     - 'f': objective function
     - 'x0': n-dimensional vector (first iterate)
@@ -164,7 +165,8 @@ end
     - 'b': n-dimensional vector with the upper bounds
     - 'm': integer (number of interpolation conditions)
 
-    Returns a n × m matrix, a m-dimensional vector and two n-dimensional vectors
+    Returns an n × m matrix, a m-dimensional vector,
+    two n-dimensional vectors and two index lists.
 
 """
 function initial_set(f, x0, Δ, a, b, m)
@@ -173,6 +175,8 @@ function initial_set(f, x0, Δ, a, b, m)
     α_values = zeros(n)
     β_values = zeros(n)
     f_values = zeros(m)
+    p_indexes = []
+    q_indexes = []
     set[:, 1] = x0
     aux_vector = zeros(n)
     aux = 0.0
@@ -223,7 +227,8 @@ function initial_set(f, x0, Δ, a, b, m)
                 else
                     q = p + l + 1 - n
                 end
-
+                push!(p_indexes, p)
+                push!(q_indexes, q)
                 set[:, j] .= set[:, p + 1] .+ set[:, q + 1] .- x0
 
             end
@@ -235,7 +240,8 @@ function initial_set(f, x0, Δ, a, b, m)
             else
                 q = p + c + 2 - n
             end
-
+            push!(p_indexes, p)
+            push!(q_indexes, q)
             set[:, j] .= set[:, p + 1] .+ set[:, q + 1] .- x0
 
         end
@@ -246,7 +252,6 @@ function initial_set(f, x0, Δ, a, b, m)
         
     end
  
-    return set, f_values, α_values, β_values
+    return set, f_values, α_values, β_values, p_indexes, q_indexes
 
 end
-
