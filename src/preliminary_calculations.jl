@@ -255,3 +255,60 @@ function initial_set(f, x0, Δ, a, b, m)
     return set, f_values, α_values, β_values, p_indexes, q_indexes
 
 end
+
+"""
+
+    initial_model(set, f_values, α_values, β_values, p_indexes, q_indexes)
+
+    Constructs the gradient vector and the Hessian matrix of the first model
+    
+    - 'f_values': m-dimensional vector with the function values at the interpolation points
+    - 'α_values': n-dimensional vector with some constants related with the first n points
+    - 'β_values': n-dimensional vector with some constants related with the last n points
+    - 'p_indexes': list containing the values of p(j), for the case 2n + 2 <= j <= leq m
+    - 'q_indexes': list containing the values of q(j), for the case 2n + 2 <= j <= leq m
+
+    Returns a n-dimensional vector g = ∇Q and a n × m matrix G = ∇^2Q
+
+"""
+function initial_model(f_values, α_values, β_values, p_indexes, q_indexes)
+    n = length(α_values)
+    m = length(f_values)
+    n1 = length(p_index)
+    g .= 0.0
+    G .= 0.0
+    aux_matrix = zeros(2, 2)
+    aux_vector_01 = zeros(2)
+    aux_vector_02 = zeros(2)
+
+    for i=1:min(n, m-n-1)
+        aux_matrix[1, 1] = α_values[i]
+        aux_matrix[1, 2] = α_values[i] ^ 2.0 / 2.0
+        aux_matrix[2, 1] = β_values[i]
+        aux_matrix[2, 2] = β_values[i] ^ 2.0 / 2.0
+        aux_vector_01[1] = f_values[i + 1] - f_values[1]
+        aux_vector_01[2] = f_values[n + i + 1] - f_values[1]
+
+        aux_vector_02 = aux_matrix \ aux_vector_01
+        g[i] = aux_vector_02[1]
+        G[i, i] = aux_vector_02[2]
+    end
+    if m < 2*n+1
+        for i=(m-n):n
+            g[i] = (f_values[i + 1] - f_values[1]) / α_values[i]
+        end
+    else
+        for i = 1:n1
+            j = 2*n + 1 + i
+            p_j = p_indexes[i]
+            q_j = q_indexes[i]
+            G[p_j, q_j] = (f_values[j] - f_values[1] - α_values[p_j] * g[p_j] - α_values[q_j] * g[q_j] 
+                                - (α_values[p_j] ^ 2.0 / 2.0) * G[p_j, p_j] 
+                                - (α_values[q_j] ^ 2.0 / 2.0) * G[q_j, q_j] ) / (α_values[p_j] * α_values[q_j])
+            G[q_j, p_j] = G[p_j, q_j]
+        end
+    end
+
+    return g, G
+
+end
