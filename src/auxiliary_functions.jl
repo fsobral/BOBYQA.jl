@@ -2,24 +2,24 @@ using LinearAlgebra
 
 """
 
-    active_set(gk, xk, a, b)
+    active_set(g, x, a, b)
 
     Constructs the set of active constraints
 
-    - 'gk': n-dimensional vector (gradient of the model calculated in xk)
-    - 'xk': n-dimensional vector (current iterate)
+    - 'n': dimension of the search space
+    - 'g': n-dimensional vector (gradient of the model calculated in xk)
+    - 'x': n-dimensional vector (current iterate)
     - 'a': n-dimensional vector with the lower bounds
     - 'b': n-dimensional vector with the upper bounds
 
     Returns a list with the indices that are fixed at the bounds
 
 """
-function active_set(gk, xk, a, b)
-    n = length(xk)
+function active_set(n, g, x, a, b)
     index_list = []
 
     for i=1:n
-        if ( xk[i] == a[i] && gk[i] >= 0.0 ) || ( xk[i] == b[i] && gk[i] <= 0.0 )
+        if ( x[i] == a[i] && g[i] >= 0.0 ) || ( x[i] == b[i] && g[i] <= 0.0 )
             push!(index_list, i)
         end
     end
