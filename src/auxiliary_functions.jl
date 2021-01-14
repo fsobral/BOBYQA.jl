@@ -54,143 +54,72 @@ end
 
 """
 
-    alpha_Delta(d, s, Δ)
-
-    Determines which is the largest value of α such that ||d + αs|| <= Δ is satisfied
-
-    - 'd': n-dimensional vector (direction) 
-    - 's': n-dimensional vector (new search-direction) 
-    - 'Δ': positive real value (trust-region radius)
-
-    Returns the real value α_Δ
-
-"""
-function alpha_Delta(d, s, Δ)
-    n = length(xk)
-    α = Inf
-    α_i = 0.0
-
-    for i=1:n
-        if s[i] > 0.0
-            α_i = (Δ - d[i]) / s[i]
-        elseif s[i] < 0.0
-            α_i = (-Δ - d[i]) / s[i]
-        else
-            α_i = Inf
-        end
-        if α_i < α
-            α = α_i
-        end
-    end
-
-    return α
-
-end
-
-"""
-
-    alpha_B(xk, d, s, a, b)
-
-    Determines which is the largest value of α such that xk + d + αs satisfies the bounds
-
-    - 'xk': n-dimensional vector (current iterate)
-    - 'd': n-dimensional vector (direction) 
-    - 's': n-dimensional vector (new search-direction)    
-    - 'a': n-dimensional vector with the lower bounds
-    - 'b': n-dimensional vector with the upper bounds
-
-    Returns the real value α_B, and a list of indexes that violate the bound restrictions
-
-"""
-function alpha_B(xk, d, s, a, b)
-    n = length(xk)
-    α = Inf
-    α_i = 0.0
-    index_list = []
-
-    for i=1:n
-        if s[i] > 0.0
-            α_i = (b[i] - x[i] - d[i]) / s[i]
-        elseif s[i] < 0.0
-            α_i = (a[i] - x[i] - d[i]) / s[i]
-        else
-            α_i = Inf
-        end
-        if α_i < α
-            α = α_i
-        end
-    end
-    for i = 1:n
-        if ((a[i] - x[i] - d[i]) == α * s[i]) || ((b[i] - x[i] - d[i]) == α * s[i])
-            push!(index_list, i)
-        end
-    end
-
-    return α, index_list
-
-end
-
-"""
-
-    alpha_Q(gk, Gk, d, s)
-
-    Determines which is the largest value of α such that Q(xk + d + αs) decreases monotonically
-
-    - 'gk': n-dimensional vector (gradient of the model calculated in xk)
-    - 'Gk': n × n matrix (hessian of the model calculated in xk)
-    - 'd': n-dimensional vector (direction) 
-    - 's': n-dimensional vector (new search-direction)    
-
-    Returns the real value α_Q
-
-"""
-function alpha_Q(gk, Gk, d, s)
-    sGd = dot(s, Gk * d)
-    sGs = dot(s, Gk * s)
-    sg = dot(s, gk)
-
-    α_Q = Inf
-
-    if sGs > 0.0
-        α_Q = (- sg - sGd) / sGs
-    end
-
-    return α_Q
-
-end
-
-"""
-
-    calculate_alpha(gk, Gk, xk, d, s, Δ, a, b)
+    calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
 
     Determines the stepsize α, which will be the minimum value between α_Δ, α_B and α_Q
 
-    - 'gk': n-dimensional vector (gradient of the model calculated in xk)
-    - 'Gk': n × n matrix (hessian of the model calculated in xk)
-    - 'xk': n-dimensional vector (current iterate) 
+    - 'n': dimension of the search space
+    - 'x': n-dimensional vector (current iterate) 
     - 'd': n-dimensional vector (direction) 
     - 's': n-dimensional vector (new search-direction)
     - 'Δ': positive real value (trust-region radius)
     - 'a': n-dimensional vector with the lower bounds
-    - 'b': n-dimensional vector with the upper bounds    
+    - 'b': n-dimensional vector with the upper bounds
+    - 'sg': pre-calculated value of s'g
+    - 'sGd': pre-calculated value of s'Gd
+    - 'sGs': pre-calculated value of s'Gs
     
     Returns the real value α, an index that indicates which value was chosen, and a list 
     of indexes that violate the bound restrictions (in the case α = α_B) or an empty list for the other cases
 
 """
-function calculate_alpha(gk, Gk, xk, d, s, Δ, a, b)
-    v = zeros(3)
-    v[1] = alpha_Delta(d, s, Δ)
-    v[2], index = alpha_B(xk, d, s, a, b)
-    v[3] = alpha_Q(gk, Gk, d, s)
-    values = findmin(v)
-    if values[2] != 2
-        index = []
+function calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+    α_values = Inf * ones(3)
+    Δ_i = 0.0
+    B_i = 0.0
+    fixed_bounds = []
+
+    # Computes α_Δ and α_B
+    for i=1:n
+        if s[i] > 0.0
+            Δ_i = (Δ - d[i]) / s[i]
+            B_i = (b[i] - x[i] - d[i]) / s[i]
+        elseif s[i] < 0.0
+            Δ_i = (- Δ - d[i]) / s[i]
+            B_i = (a[i] - x[i] - d[i]) / s[i]
+        else
+            Δ_i = Inf
+            B_i = Inf
+        end
+        if Δ_i < α_values[1]
+            α_values[1] = Δ_i
+        end
+        if B_i < α_values[2]
+            α_values[2] = B_i
+        end
     end
 
-    return values[1], values[2], index
+    # Compute α_Q
+    if sGs > 0.0
+        α_values[3] = - (sg + sGd) / sGs
+    end
+
+    # Determines the value of α and the correspond index in the vector α_values
+    α, index_α = findmin(α_values)
+
+    # Computes the indexes of the fixed bounds, for the case that α_B is chosen for α.
+    if index_α == 2
+        for i = 1:n
+            if ((a[i] - x[i] - d[i]) == α * s[i]) || ((b[i] - x[i] - d[i]) == α * s[i])
+                push!(fixed_bounds, i)
+            end
+        end
+    end
+ 
+    return α, index_α, fixed_bounds
 
 end
+
 
 """
 
