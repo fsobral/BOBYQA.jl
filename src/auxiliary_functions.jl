@@ -282,3 +282,61 @@ function calculate_theta(gk, Gk, xk, d, proj_d, s, a, b)
     end
     
 end
+
+function calculate_theta!(n, x, proj_d, s, a, b, pdGpd, sGs, dGs, dGpd, sGpd, d)
+    θ_B = 0.0
+    θ_Q = 0.0
+    index_list = []
+    aux_1 = a - x - d + proj_d
+    aux_2 = b - x - d + proj_d
+    
+    # Computes θ_B
+    θ = pi / 4
+    cos_θ = cos(θ)
+    sin_θ = sin(θ)
+    while true
+        for i = 1:n
+            if (aux_1[i] > (cos_θ * proj_d[i] + sin_θ * s[i])) || (u[i] < (cos_θ * proj_d[i] + sin_θ * s[i]))
+                θ *= 0.9
+                cos_θ = cos(θ)
+                sin_θ = sin(θ)
+               continue
+            end
+        end
+    end
+    θ_B = θ
+
+    # Computes θ_Q
+    θ = pi / 4
+    cos_θ = cos(θ)
+    sin_θ = sin(θ)
+    while true
+        if (- sin_θ * dGpd + cos_θ * dGs - sin_θ * cos_θ * sGs - sin_θ * ( cos_θ - 1.0 ) * pdGpd + ( - sin_θ ^ 2.0 + cos_θ ^ 2.0 - cos_θ) * sGpd) >= 0.0
+            θ *= 0.9
+            cos_θ = cos(θ)
+            sin_θ = sin(θ)
+            continue
+        end
+    end
+    θ_Q = θ
+
+    # Determines the value of Θ
+    θ = min(θ_B, θ_Q)
+
+    # Computes d(Θ)
+    d .= d .+ x .- proj_d + cos(θ) * proj_d + sin(θ) * s
+
+    # Computes the indexes of the fixed bounds,
+    for i = 1:n
+        if ((a[i] - x[i]) == d[i]) || ((b[i] - x[i]) == d[i])
+            push!(index_list, i)
+        end
+    end
+
+    if θ == θ_B
+        return index_list, false
+    else
+        return index_list, true
+    end
+
+end
