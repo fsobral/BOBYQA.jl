@@ -21,51 +21,98 @@ include("auxiliary_functions.jl")
     Returns a n-dimensional vector.
 
 """
-function tcg_active_set(gk, Gk, xk, Δ, a, b)
-    n = length(xk)
+function trsbox(n, gk, Gk, xk, Δ, a, b)
+
+    #Initializes some variables and vectors.
     α = 0.0
     β = 0.0
-    index_α = 0 
-    index = 0
-    aux_1 = 0.0
-    aux_2 = 0.0
-    aux_3 = 0.0
-    aux_4 = 0.0
-    aux_vector_1 = zeros(n)
-    aux_vector_2 = zeros(n)
-    aux_vector_3 = zeros(n)
-    aux_vector_4 = zeros(n)
-    d_old = zeros(n)
-
-    I = active_set(gk, xk, a, b)
+    index_α = 0
+    dg = 0.0
+    dog = 0.0
+    sg = 0.0
+    sGd = 0.0
+    sGs = 0.0
+    dGd = 0.0
+    doGdo = 0.0
+    norm2_proj_d = 0.0
+    norm2_proj_grad_xd = 0.0
+    #index = 0
+    #aux_1 = 0.0
+    #aux_2 = 0.0
+    #aux_3 = 0.0
+    #aux_4 = 0.0
+    #aux_vector_1 = zeros(n)
+    #aux_vector_2 = zeros(n)
+    #aux_vector_3 = zeros(n)
+    #aux_vector_4 = zeros(n)
     d = zeros(n)
-    s = - projection_active_set(gk, I)
+    s = zeros(n)
+    d_old = zeros(n)
+    Gd = zeros(n)
+    Gdo = zeros(n)
+    Gs = zeros(n)
+    grad_xd = zeros(n)
+    proj_d = zeros(n)
+    proj_grad_xd = zeros(n)
 
-    while true      
 
-        if length(I) == n
-            return d
-        end
+    # Calculates the set of active restrictions and the first search direction
+    I = active_set(n, gk, xk, a, b)
+    projection_active_set!(gk, I, s)
+    s .= .-s
 
-        α, index_α, indexes = calculate_alpha(gk, Gk, xk, d, s, Δ, a, b)
+    # Stop Criteria evaluation
+    if length(I) == n
+        msg = "All bounds restrictions are active."
+        return d, msg
+    end
 
-        d .= d .+ α .* s
+    # Stop Criteria evaluation
+    if dot(s, s) == 0.0
+        msg = "The initial search direction is null."
+        return zeros(n), msg
+    end
 
-        mul!(aux_vector_1, Gk, d)
-        aux_vector_1 .+= gk 
-        aux_vector_2 .= projection_active_set(aux_vector_1, I)
-        aux_1 = dot(aux_vector_2, aux_vector_2)
-        aux_2 = dot(d, gk) + dot(d, Gk * d) / 2.0
+    # Note that, for the first iteration, we have sGd = 0.0
+    sg = dot(s, gk)
+    mul!(Gs, Gk, s)
+    sGs = dot(s, Gs)
+
+    while true         
+
+        # Computes the index α
+        α, index_α, indexes = calculate_alpha(n, xk, d, s, Δ, a, b, sg, sGd, sGs)
+
+        # Computes the new direction d
+        d_old .= d
+        d .+= α .* s
+
+        # Computes some curvatures and save old information about it
+        dog = dg
+        Gdo .= Gd
+        doGdo = dGd
+        dg = dot(d, gk)
+        mul!(Gd, Gk, d)
+        sGd = dot(s, Gd)
+        dGd = dot(d, Gd)
+
+        # Computes ∇Q(xk + d), P_I(∇Q(xk + d)) and ||P_I(∇Q(xk + d))||^2     
+        grad_xd .= gk .+ Gd
+        projection_active_set!(grad_xd, I, proj_grad_xd)
+        norm2_proj_grad_xd = dot(aux_vector_2, aux_vector_2)
+
+        # Computes P_I(d) and ||P_I(d)||^2
+        projection_active_set!(d, I, proj_d)
+        norm2_proj_d = dot(proj_d, proj_d)
         
-        # α_Delta is chosen
+        # α_Δ is chosen
         if index_α == 1
             while true
-                aux_vector_4 .= projection_active_set(d, I)
-                aux_4 = dot(aux_vector_4, aux_vector_4)
-            
-                if aux_4 * aux_1 - dot(aux_vector_4, aux_vector_2) ^ 2.0 + 1.0e-4 * aux_2 <= 0.0
-                    return d
-                else
+
+                if (norm2_proj_d * norm2_proj_grad_xd - dot(proj_d, proj_grad_xd) ^ 2.0 + 1.0e-4 * (dg + dGd)) <= 0.0
+                    msg = "Stopping criteria for α_Δ have been achieved"
+                    return d, msg
+                else # ver daqui em diante...
                     d_old .= d
                     s .= new_search_direction(aux_vector_4, aux_vector_2)
                     d, indexes, value = calculate_theta(gk, Gk, xk, d, aux_vector_4, s, a, b)
