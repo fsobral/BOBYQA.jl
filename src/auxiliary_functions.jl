@@ -122,38 +122,41 @@ end
 
 """
 
-    new_search_direction(proj_d, proj_grad)
+    new_search_direction!(proj_d, proj_grad, norm2_proj_d, norm2_proj_grad, v)
 
     Calculate a new search direction for the case α = α_Δ
 
     - 'proj_d': n-dimensional vector (projection of the direction d)
     - 'proj_grad': n-dimensional vector (projection of gradient of the model calculated in xk + d) 
-    
-    Returns a n-dimensional vector
+    - 'norm2_proj_d': value of 2-norm of vector proj_d squared.
+    - 'norm2_proj_grad': value of 2-norm of vector proj_grad squared.
+    - 'v': n-dimensional auxiliary vector
+
+    Modifies v to become the new search direction
 
 """
-function new_search_direction(proj_d, proj_grad)
-    dg = dot(proj_d, proj_grad)
-    dd = dot(proj_d, proj_d)
-    gg = dot(proj_grad, proj_grad)
+function new_search_direction!(proj_d, proj_grad, norm2_proj_d, norm2_proj_grad, v)
+    pdpg = dot(proj_d, proj_grad)
     α = 0.0
     β = 0.0
     aux = 0.0
 
-    if dg == 0
-        β = - sqrt(dd / gg)
+    if pdpg == 0
+        β = - sqrt(norm2_proj_d / norm2_proj_grad)
+        v .= β .* proj_grad
     else
-        aux = ((dd ^ 2.0 * gg) / (dg ^ 2.0)) - dd
-        α = - sqrt(aux * dd) / aux
-        β = - α * dd / dg
+        aux = ((norm2_proj_d ^ 2.0 * norm2_proj_grad) / (pdpg)) - norm2_proj_d
+        α = - sqrt(aux * norm2_proj_d) / aux
+        β = - α * norm2_proj_d / pdpg
 
-        if β >= - α * dg / gg
-            α = dd / sqrt(aux * dd)
-            β = - α * dd / dg
+        # Checks if β < (- α * P_I(d)'P_I(∇Q(xk+d)) / ||P_I(∇Q(xk+d))||^2) 
+        if β >= (- α * pdpg / norm2_proj_grad)
+            α = norm2_proj_d / sqrt(aux * norm2_proj_d)
+            β = - α * norm2_proj_d / pdpg
         end
+        
+        v .= α .* proj_d .+ β .* proj_grad
     end
-
-    return α * proj_d + β * proj_grad
     
 end
 
