@@ -30,25 +30,24 @@ end
 
 """
 
-    projection_active_set(v, index_set)
+    projection_active_set!(v, index_set, proj_v)
 
     Constructs the projection operator from the set of active constraints
     
     - 'v': n-dimensional vector 
     - 'index_set': list with the indices of the active constraints
+    - 'proj_v': n-dimensional auxiliary vector
 
-    Returns a n-dimensional vector, which is the projection of v by the set of active constraints
+    Modifies proj_v to become the projection of vector v by the set of active constraints
 
 """
-function projection_active_set(v, index_set)
-    n = length(index_set)
-    proj_v = copy(v)
+function projection_active_set!(v, index_set, proj_v)
+    m = length(index_set)
+    copy!(proj_v, v)
 
-    for i=1:n
+    for i=1:m
         proj_v[index_set[i]] = 0.0
     end
-
-    return proj_v
 
 end
 
