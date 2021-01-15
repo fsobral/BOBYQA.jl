@@ -1,4 +1,3 @@
-using LinearAlgebra
 
 """
 
@@ -43,7 +42,7 @@ end
 """
 function projection_active_set!(v, index_set, proj_v)
     m = length(index_set)
-    copy!(proj_v, v)
+    copyto!(proj_v, v)
 
     for i=1:m
         proj_v[index_set[i]] = 0.0
