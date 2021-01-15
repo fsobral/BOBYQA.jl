@@ -76,7 +76,7 @@ function calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
     α_values = Inf * ones(3)
     Δ_i = 0.0
     B_i = 0.0
-    fixed_bounds = []
+    index_list = []
 
     # Computes α_Δ and α_B
     for i=1:n
@@ -110,12 +110,12 @@ function calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
     if index_α == 2
         for i = 1:n
             if ((a[i] - x[i] - d[i]) == α * s[i]) || ((b[i] - x[i] - d[i]) == α * s[i])
-                push!(fixed_bounds, i)
+                push!(index_list, i)
             end
         end
     end
  
-    return α, index_α, fixed_bounds
+    return α, index_α, index_list
 
 end
 
