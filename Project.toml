@@ -1,4 +1,8 @@
-name = "BOBYQA.jl"
+name = "BOBYQA"
 uuid = "72c7d756-3f17-4f0f-b43c-101222e85311"
 authors = ["Francisco N. C. Sobral <fsobral@uem.br>"]
 version = "0.1.0"
+
+[deps]
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
