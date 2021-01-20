@@ -118,7 +118,6 @@ function calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
 
 end
 
-
 """
 
     new_search_direction!(proj_d, proj_grad, norm2_proj_d, norm2_proj_grad, v)
@@ -161,128 +160,27 @@ end
 
 """
 
-    theta_B(xk, d, proj_d, s, a, b)
+    calculate_theta!(n, x, proj_d, s, a, b, pdGpd, sGs, dGs, dGpd, sGpd, d)
 
-    Determines which is the largest value of θ such that xk + d(θ) satisfies the bounds
+    Calculate a rotation and a new direction for the case α = α_Δ
 
-    - 'xk': n-dimensional vector (current iterate) 
-    - 'd': n-dimensional vector (direction)
-    - 'proj_d': n-dimensional vector (projection of the direction d) 
-    - 's': n-dimensional vector (new search-direction)
-    - 'a': n-dimensional vector with the lower bounds
-    - 'b': n-dimensional vector with the upper bounds    
-    
-    Returns the real value θ (an angle), a n-dimensional vector d(θ), and a list of indexes that violate the bound restrictions
-
-"""
-function theta_B(xk, d, proj_d, s, a, b)
-    θ = pi / 4
-    n = length(xk)
-    l = a - xk
-    u = b - xk
-    d_θ = zeros(n)
-    index_list = []
-    
-    while true
-        d_θ .= d .- proj_d .+ cos(θ) .* proj_d .+ sin(θ) .* s
-        for i = 1:n
-            if (l[i] > d_θ[i]) || (u[i] < d_θ[i])
-               θ *= 0.9
-               continue
-            end
-        end
-    end
-    for i = 1:n
-        if (l[i] == d_θ[i]) || (u[i] == d_θ[i])
-            push!(index_list, i)
-        end
-    end
-
-    return θ, d_θ, index_list
-
-end
-
-"""
-
-    theta_Q(gk, Gk, xk, d, proj_d, s, a, b)
-
-    Determines which is the largest value of θ such that Q(xk + d(θ)) decreases monotonically
-
-    - 'gk': n-dimensional vector (gradient of the model calculated in xk)
-    - 'Gk': n × n matrix (hessian of the model calculated in xk)
-    - 'xk': n-dimensional vector (current iterate) 
-    - 'd': n-dimensional vector (direction)
-    - 'proj_d': n-dimensional vector (projection of the direction d) 
-    - 's': n-dimensional vector (new search-direction)
-    - 'a': n-dimensional vector with the lower bounds
-    - 'b': n-dimensional vector with the upper bounds   
-    
-    Returns the real value θ (an angle), a n-dimensional vector d(θ), and a list of indexes that violate the bound restrictions
-
-"""
-function theta_Q(gk, Gk, xk, d, proj_d, s, a, b)
-    dGp = dot(d, Gk * proj_d)
-    dGs = dot(d, Gk * s)
-    sGs = dot(s, Gk * s)
-    sGp = dot(s, Gk * proj_d)
-    pGp = dot(proj_d, Gk * proj_d)
-    θ = pi / 4
-    index_list = []
-
-    while true
-        sin_θ = sin(θ)
-        cos_θ = cos(θ)
-        aux = - sin_θ * dGp + cos_θ * dGs - sin_θ * cos_θ * sGs - sin_θ * ( cos_θ - 1.0 ) * pGp + ( - sin_θ ^ 2.0 + cos_θ ^ 2.0 - cos_θ) * sGp
-
-        if aux >= 0.0
-            θ *= 0.9
-            continue
-        end
-    end
-
-    d_θ = d - proj_d + sin_θ * proj_d + cos_θ * s
-
-    for i = 1:n
-        if ((a[i] - x[i]) == d_θ[i]) || ((b[i] - x[i]) == d_θ[i])
-            push!(index_list, i)
-        end
-    end
-
-    return θ, d_θ, index_list
-
-end
-
-"""
-
-    calculate_theta(gk, Gk, xk, d, proj_d, s, a, b)
-
-    Determines the direction d_θ, which will be defined by the minimum value between θ_B and θ_Q
-
-    - 'gk': n-dimensional vector (gradient of the model calculated in xk)
-    - 'Gk': n × n matrix (hessian of the model calculated in xk)
-    - 'xk': n-dimensional vector (current iterate) 
-    - 'd': n-dimensional vector (direction)
+    - 'n': dimension of the search space
+    - 'x': n-dimensional vector (current iterate)
     - 'proj_d': n-dimensional vector (projection of the direction d)
     - 's': n-dimensional vector (new search-direction)
     - 'a': n-dimensional vector with the lower bounds
-    - 'b': n-dimensional vector with the upper bounds    
-    
-    Returns a n-dimensional vector d(θ), a list of indexes that violate the bound restrictions, and a boolean (true if θ = θ_Q or false otherwise)
+    - 'b': n-dimensional vector with the upper bounds
+    - 'sGs': pre-calculated value of s'Gs
+    - 'dGs': pre-calculated value of d'Gs
+    - 'dGpd': pre-calculated value of d'Gpd, where pd is the projection of d by I.
+    - 'sGpd': pre-calculated value of s'Gpd, where pd is the projection of d by I.
+    - 'pdGpd': pre-calculated value of s'Gpd, where pd is the projection of d by I.
+    - 'd': n-dimensional vector (direction)
+
+    Modifies d to become the new direction and return a boolean value (true if θ == θ_Q, false otherwise)
 
 """
-function calculate_theta(gk, Gk, xk, d, proj_d, s, a, b)
-    θ_B, dθ_B, listθ_B = theta_B(xk, d, proj_d, s, a, b)
-    θ_Q, dθ_Q, listθ_Q = theta_Q(gk, Gk, xk, d, proj_d, s, a, b)
-
-    if min(θ_B, θ_Q) == θ_B
-        return dθ_B, listθ_B, false
-    else
-        return dθ_Q, listθ_Q, true
-    end
-    
-end
-
-function calculate_theta!(n, x, proj_d, s, a, b, pdGpd, sGs, dGs, dGpd, sGpd, d)
+function calculate_theta!(n, x, proj_d, s, a, b, sGs, dGs, dGpd, sGpd, pdGpd, d)
     θ_B = 0.0
     θ_Q = 0.0
     index_list = []
@@ -338,4 +236,60 @@ function calculate_theta!(n, x, proj_d, s, a, b, pdGpd, sGs, dGs, dGpd, sGpd, d)
         return index_list, true
     end
 
+end
+
+"""
+
+    stopping_criterion_34(Δ, norm2_proj_grad, dg, dGd)
+
+    Checks the stopping criterion for choice α = α_B and α = α_Q, present in equation 3.4 of the main reference.
+
+    - 'Δ': positive real value (trust-region radius)
+    - 'norm2_proj_grad': value of 2-norm of vector proj_grad squared.
+    - 'dg': pre-calculated value of d'g
+    - 'dGd': pre-calculated value of d'Gd
+
+    Return a boolean value
+
+"""
+function stopping_criterion_34(Δ, norm2_proj_grad, dg, dGd)
+    return isapprox(sqrt(norm2_proj_grad) * Δ + 1.0e-2 * (dg + dGd), 0.0; atol = eps(Float64), rtol = 0.0)
+end
+
+"""
+
+    stopping_criterion_34_B(dg, dog, dGd, doGdo)
+
+    Checks the additional stopping criterion for choice α = α_Q and α = α_Δ, present in pages 10 and 11 of the main reference.
+
+    - 'dg': pre-calculated value of d'g
+    - 'dog': pre-calculated value of do'g, where do is the old value of d.
+    - 'dGd': pre-calculated value of d'Gd
+    - 'doGdo': pre-calculated value of do'Gdo, where do is the old value of d.
+
+    Return a boolean value
+
+"""
+function stopping_criterion_34_B(dg, dog, dGd, doGdo)
+    return isapprox(1.01 * (dog + doGdo) - dg - dGd, 0.0; atol = eps(Float64), rtol = 0.0)
+end
+
+"""
+
+    stopping_criterion_35(proj_d, proj_grad, norm2_proj_d, norm2_proj_grad, dg, dGd)
+
+    Checks the stopping criterion for choice α = α_Δ, present in equation 3.5 of the main reference.
+
+    - 'proj_d': n-dimensional vector (projection of the direction d)
+    - 'proj_grad': n-dimensional vector (projection of gradient of the model calculated in xk + d) 
+    - 'norm2_proj_d': value of 2-norm of vector proj_d squared.
+    - 'norm2_proj_grad': value of 2-norm of vector proj_grad squared.
+    - 'dg': pre-calculated value of d'g
+    - 'dGd': pre-calculated value of d'Gd
+
+    Return a boolean value
+
+"""
+function stopping_criterion_35(proj_d, proj_grad, norm2_proj_d, norm2_proj_grad, dg, dGd)
+    return isapprox(norm2_proj_d * norm2_proj_grad - dot(proj_d, proj_grad) ^ 2.0 + 1.0e-4 * (dg + dGd), 0.0; atol = eps(Float64), rtol = 0.0)
 end
