@@ -165,7 +165,7 @@ end
 
 """
 
-    calculate_theta!(n, x, proj_d, s, a, b, pdGpd, sGs, dGs, dGpd, sGpd, d)
+    calculate_theta!(n, x, proj_d, s, a, b, sGs, dGs, dGpd, sGpd, pdGpd, d)
 
     Calculate a rotation and a new direction for the case α = α_Δ
 
