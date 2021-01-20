@@ -1,4 +1,8 @@
-# TRSBOX: Versão inicial
+# TRSBOX - Trust Region Step in the Box
+
+# Main reference:
+# POWELL, M. J. D. (2009). The BOBYQA algorithm for bound constrained optimization without derivatives.
+# Cambridge NA Report NA2009/06, University of Cambridge, Cambridge, 26-46.
 
 using LinearAlgebra
 
@@ -6,7 +10,7 @@ include("auxiliary_functions.jl")
 
 """
 
-    tcg_active_set(gk, Gk, xk, Δ, a, b)
+    trsbox(n, gk, Gk, xk, Δ, a, b)
 
     A version of a Truncated Conjugate Gradient with Active Set algorithm for the
     Trust-Region Subproblem
@@ -54,7 +58,6 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
     grad_xd = zeros(n)
     proj_d = zeros(n)
     proj_grad_xd = zeros(n)
-
 
     # Calculates the set of active restrictions and the first search direction
     I = active_set(n, gk, xk, a, b)
@@ -109,12 +112,19 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
         if index_α == 1
             while true
 
+                # Stop Criteria evaluation
                 if (norm2_proj_d * norm2_proj_grad_xd - dot(proj_d, proj_grad_xd) ^ 2.0 + 1.0e-4 * (dg + dGd)) <= 0.0
                     msg = "Stopping criteria for α_Δ have been achieved"
                     return d, msg
-                else # ver daqui em diante...
+                else
+                    # Save old information about direction d
                     d_old .= d
-                    s .= new_search_direction(aux_vector_4, aux_vector_2)
+                    dog = dg
+                    Gdo .= Gd
+                    doGdo = dGd
+                    # Calculate the new search direction s
+                    new_search_direction!(proj_d, proj_grad_xd, norm2_proj_d, norm2_proj_grad_xd, s) # ver daqui em diante
+                    # Calculate the new direction d
                     d, indexes, value = calculate_theta(gk, Gk, xk, d, aux_vector_4, s, a, b)
                     push!(I, indexes)
 
