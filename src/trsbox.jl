@@ -2,7 +2,7 @@
 
 # Main reference:
 # POWELL, M. J. D. (2009). The BOBYQA algorithm for bound constrained optimization without derivatives.
-# Cambridge NA Report NA2009/06, University of Cambridge, Cambridge, 26-46.
+# Cambridge NA Report NA2009/06, University of Cambridge, Cambridge.
 
 using LinearAlgebra
 
@@ -55,6 +55,7 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
     Gd = zeros(n)
     Gdo = zeros(n)
     Gs = zeros(n)
+    Gpd = zeros(n)
     grad_xd = zeros(n)
     proj_d = zeros(n)
     proj_grad_xd = zeros(n)
@@ -112,30 +113,58 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
         if index_α == 1
             while true
 
-                # Stop Criteria evaluation
-                if (norm2_proj_d * norm2_proj_grad_xd - dot(proj_d, proj_grad_xd) ^ 2.0 + 1.0e-4 * (dg + dGd)) <= 0.0
-                    msg = "Stopping criteria for α_Δ have been achieved"
+                # Stop Criteria evaluation (inequality 3.5)
+                if stopping_criterion_35(proj_d, proj_grad_xd, norm2_proj_d, norm2_proj_grad_xd, dg, dGd)
+                    msg = "Stopping criterion for α_Δ has been reached"
                     return d, msg
                 else
+
                     # Save old information about direction d
                     d_old .= d
                     dog = dg
                     Gdo .= Gd
                     doGdo = dGd
+
                     # Calculate the new search direction s
-                    new_search_direction!(proj_d, proj_grad_xd, norm2_proj_d, norm2_proj_grad_xd, s) # ver daqui em diante
+                    new_search_direction!(proj_d, proj_grad_xd, norm2_proj_d, norm2_proj_grad_xd, s)
+
+                    # Calculate some curvature information
+                    mul!(Gs, Gk, s)
+                    sGs = dot(s, Gs)
+                    dGs = dot(gk, Gs)
+                    mul!(Gpd, Gk, proj_d)
+                    dGpd = dot(d, Gpd)
+                    sGpd = dot(s, Gpd)
+                    pdGpd = dot(pd, Gpd)
+
                     # Calculate the new direction d
-                    d, indexes, value = calculate_theta(gk, Gk, xk, d, aux_vector_4, s, a, b)
+                    indexes, value = calculate_theta!(n, xk, proj_d, s, a, b, sGs, dGs, dGpd, sGpd, pdGpd, d)
+
+                    # Updates the set of indexes of the fixed bounds.
                     push!(I, indexes)
 
-                    if value == true
-                        doGdo = dot(d_old, Gk * d_old)
-                        dGd = dot(d, Gk * d)
-                        dogk = dot(d_old, gk)
-                        if (dogk + 0.5 * doGdo - dot(d, gk) - 0.5 * dGd + 1.0e-2 * (dogk + 0.5 * doGdo)) <= 0.0
-                            return d
+                    # Calculate some curvature information
+                    dg = dot(d, gk)
+                    mul!(Gd, Gk, d)
+                    dGd = dot(d, Gd)
+
+                    # Stop Criteria evaluation (inequality 3.4 modified)
+                    if value == true                       
+                        if stopping_criterion_34_B(dg, dog, dGd, doGdo) 
+                            msg = "Stopping criterion for α_Δ with the choice of θ_Q has been reached"
+                            return d, msg
                         end
                     end
+
+                    # Computes ∇Q(xk + d), P_I(∇Q(xk + d)) and ||P_I(∇Q(xk + d))||^2     
+                    grad_xd .= gk .+ Gd
+                    projection_active_set!(grad_xd, I, proj_grad_xd)
+                    norm2_proj_grad_xd = dot(aux_vector_2, aux_vector_2)
+
+                    # Computes P_I(d) and ||P_I(d)||^2
+                    projection_active_set!(d, I, proj_d)
+                    norm2_proj_d = dot(proj_d, proj_d)
+
                 end
             end          
         end
