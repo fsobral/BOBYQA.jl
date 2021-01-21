@@ -36,8 +36,11 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
     sg = 0.0
     sGd = 0.0
     sGs = 0.0
+    sGdo = 0.0
     dGd = 0.0
     doGdo = 0.0
+    pgGd = 0.0
+    pgGdo = 0.0
     norm2_proj_d = 0.0
     norm2_proj_grad_xd = 0.0
     #index = 0
@@ -188,7 +191,7 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
                 msg = "Stopping criterion for α_B has been reached"
                 return d, msg
             else
-                # New search direction
+                # New search direction s
                 s .= .- proj_grad_xd
                 continue
             end
@@ -196,28 +199,20 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
 
         # α_Q is chosen
         if index_α == 3
-            aux_vector_3 .= d - α * s
-            aux_3 = dot(aux_vector_3, Gk * aux_vector_3)
-            aux_5 = dot(d, Gk * d)
-            aux_6 = - α * dot(s, gk)
 
-            if (sqrt(aux_1) * Δ + 1.0e-2 * aux_2 <= 0.0) || (aux_6 + aux_3 - aux_5 + 1.0e-2 * aux_2 <= 0.0)
-                return d
+            # Stop Criteria evaluation (inequality 3.4 and inequality 3.4 modified)
+            if stopping_criterion_34(Δ, norm2_proj_grad_xd, dg, dGd) || stopping_criterion_34_B(dg, dog, dGd, doGdo)
+                msg = "Stopping criterion for α_Q has been reached"
+                return d, msg
             else
-                mul!(aux_vector_5, Gk, s)
-                aux_vector_5 *= - α
-                mul!(aux_vector_6, Gk, d - \alpha * s)
-                aux_vector_6 .+= gk
-                aux_vector_7 = projection_active_set(aux_vector_6)
-                β = - dot(aux_vector_5, aux_vector_7) / dot(aux_vector_5, s)
-                mul!(aux_vector_8, Gk, d)
-                aux_vector_8 .+= gk
-                if β * dot(s, aux_vector_8) < 0.0
-                    s .*= β
-                else
-                    s .*= -β
-                    continue
-                end
+                pgGd = dot(proj_grad_xd, Gd)
+                pgGdo = dot(proj_grad_xd, Gdo)
+                sGdo = dot(s, Gdo)
+
+                # New search direction s
+                s .= - ((pgGdo - pgGd) / (sGdo - sGd)) .* s
+                s .+= proj_grad_xd
+                continue
             end
         end
     end
