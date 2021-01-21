@@ -163,7 +163,25 @@ function new_search_direction!(proj_d, proj_grad, norm2_proj_d, norm2_proj_grad,
     
 end
 
-function stop_condition_theta_B(θ; n, x, d, s, proj_d, a, b)
+"""
+
+    stop_condition_theta_B(θ, n, x, d, s, proj_d, a, b)
+
+    Checks the stop criterion for choosing θ, assisting in the approximate calculation of θ_B
+
+    - 'θ': real value (to be tested)
+    - 'n': dimension of the search space
+    - 'x': n-dimensional vector (current iterate)
+    - 'd': n-dimensional vector (direction)
+    - 's': n-dimensional vector (new search-direction)
+    - 'proj_d': n-dimensional vector (projection of the direction d)
+    - 'a': n-dimensional vector with the lower bounds
+    - 'b': n-dimensional vector with the upper bounds    
+
+    Return a boolean value
+
+"""
+function stop_condition_theta_B(θ, n, x, d, s, proj_d, a, b)
     sin_θ = sin(θ)
     cos_θ = cos(θ)
     
@@ -176,7 +194,26 @@ function stop_condition_theta_B(θ; n, x, d, s, proj_d, a, b)
     return true
 end
 
-function stop_condition_theta_Q(θ; sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd)
+"""
+
+    stop_condition_theta_Q(θ, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd)
+
+    Checks the stop criterion for choosing θ, assisting in the approximate calculation of θ_Q
+
+    - 'θ': real value (to be tested)
+    - 'sg': pre-calculated value of s'g
+    - 'pdg': pre-calculated value of pd'g, where pd is the projection of d by I
+    - 'sGs': pre-calculated value of s'Gs
+    - 'dGs': pre-calculated value of d'Gs
+    - 'dGpd': pre-calculated value of d'Gpd, where pd is the projection of d by I
+    - 'sGpd': pre-calculated value of s'Gpd, where pd is the projection of d by I
+    - 'pdGpd': pre-calculated value of s'Gpd, where pd is the projection of d by I
+    - 'd': n-dimensional vector (direction)
+
+    Return a boolean value
+
+"""
+function stop_condition_theta_Q(θ, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd)
     sin_θ = sin(θ)
     cos_θ = cos(θ)
 
@@ -187,6 +224,20 @@ function stop_condition_theta_Q(θ; sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd)
     end
 end
 
+"""
+
+    binary_search(lower_value, upper_value, stop_condition, ε)
+
+    performs a binary search in the interval [lower_value, upper_value] in order to satisfy stop_condition with tolerance ε
+
+    - 'lower_value': real value (lower limit of search range)
+    - 'upper_value': real value (upper limit of search range)
+    - 'stop_condition': function that checks the stop condition
+    - 'ε': real value (tolerance)
+
+    Return a real value
+
+"""
 function binary_search(lower_value, upper_value, stop_condition, ε)
     if stop_condition(upper_value)
         return upper_value
@@ -212,7 +263,7 @@ end
 
 """
 
-    calculate_theta!(n, x, proj_d, s, a, b, sGs, dGs, dGpd, sGpd, pdGpd, d)
+    calculate_theta!(n, x, proj_d, s, a, b, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd, d)
 
     Calculate a rotation and a new direction for the case α = α_Δ
 
@@ -222,52 +273,31 @@ end
     - 's': n-dimensional vector (new search-direction)
     - 'a': n-dimensional vector with the lower bounds
     - 'b': n-dimensional vector with the upper bounds
+    - 'sg': pre-calculated value of s'g
+    - 'pdg': pre-calculated value of pd'g, where pd is the projection of d by I
     - 'sGs': pre-calculated value of s'Gs
     - 'dGs': pre-calculated value of d'Gs
-    - 'dGpd': pre-calculated value of d'Gpd, where pd is the projection of d by I.
-    - 'sGpd': pre-calculated value of s'Gpd, where pd is the projection of d by I.
-    - 'pdGpd': pre-calculated value of s'Gpd, where pd is the projection of d by I.
+    - 'dGpd': pre-calculated value of d'Gpd, where pd is the projection of d by I
+    - 'sGpd': pre-calculated value of s'Gpd, where pd is the projection of d by I
+    - 'pdGpd': pre-calculated value of s'Gpd, where pd is the projection of d by I
     - 'd': n-dimensional vector (direction)
 
     Modifies d to become the new direction and return a boolean value (true if θ == θ_Q, false otherwise)
 
 """
-function calculate_theta!(n, x, proj_d, s, a, b, sGs, dGs, dGpd, sGpd, pdGpd, d)
+function calculate_theta!(n, x, proj_d, s, a, b, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd, d)
+    ε = 1.0e-1
     θ_B = 0.0
     θ_Q = 0.0
     index_list = []
-    aux_1 = a - x - d + proj_d
-    aux_2 = b - x - d + proj_d
     
     # Computes θ_B
-    θ = pi / 4
-    cos_θ = cos(θ)
-    sin_θ = sin(θ)
-    while true
-        for i = 1:n
-            if (aux_1[i] > (cos_θ * proj_d[i] + sin_θ * s[i])) || (u[i] < (cos_θ * proj_d[i] + sin_θ * s[i]))
-                θ *= 0.9
-                cos_θ = cos(θ)
-                sin_θ = sin(θ)
-               continue
-            end
-        end
-    end
-    θ_B = θ
+    cond_B(θ) = stop_condition_theta_B(θ, n, x, d, s, proj_d, a, b)
+    θ_B = binary_search(0.0, pi / 4.0, cond_B, ε)
 
     # Computes θ_Q
-    θ = pi / 4
-    cos_θ = cos(θ)
-    sin_θ = sin(θ)
-    while true
-        if (- sin_θ * dGpd + cos_θ * dGs - sin_θ * cos_θ * sGs - sin_θ * ( cos_θ - 1.0 ) * pdGpd + ( - sin_θ ^ 2.0 + cos_θ ^ 2.0 - cos_θ) * sGpd) >= 0.0
-            θ *= 0.9
-            cos_θ = cos(θ)
-            sin_θ = sin(θ)
-            continue
-        end
-    end
-    θ_Q = θ
+    cond_Q(θ) = stop_condition_theta_Q(θ, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd)
+    θ_Q = binary_search(0.0, pi / 4.0, cond_Q, ε)
 
     # Determines the value of Θ
     θ = min(θ_B, θ_Q)
