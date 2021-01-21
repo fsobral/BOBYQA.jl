@@ -217,7 +217,7 @@ function stop_condition_theta_Q(θ, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd)
     sin_θ = sin(θ)
     cos_θ = cos(θ)
 
-    if (- sin_θ * pdg + cos_θ * sg - sin_θ * dGpd + cos_θ * dGs + sin_θ * cos_θ * sGs - sin_θ * (cos_θ - 1.0) pdGpd + (cos_θ ^ 2.0 - sin_θ ^ 2.0 - cos_θ) * sGpd) >= 0.0
+    if (- sin_θ * pdg + cos_θ * sg - sin_θ * dGpd + cos_θ * dGs + sin_θ * cos_θ * sGs - sin_θ * (cos_θ - 1.0) * pdGpd + (cos_θ ^ 2.0 - sin_θ ^ 2.0 - cos_θ) * sGpd) >= 0.0
         return false
     else
         return true
