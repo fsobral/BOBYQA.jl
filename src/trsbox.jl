@@ -10,11 +10,12 @@ include("auxiliary_functions.jl")
 
 """
 
-    trsbox(n, gk, Gk, xk, Δ, a, b)
+    trsbox!(n, gk, Gk, xk, Δ, a, b, d)
 
     A version of a Truncated Conjugate Gradient with Active Set algorithm for the
     Trust-Region Subproblem
 
+    - 'n': dimension of the search space
     - 'gk': n-dimensional vector (gradient of the model calculated in xk)
     - 'Gk': (n × n)-dimensional matrix (hessian of the model calculated in xk)
     - 'xk': n-dimensional vector (current iterate) 
@@ -22,10 +23,10 @@ include("auxiliary_functions.jl")
     - 'a': n-dimensional vector with the lower bounds
     - 'b': n-dimensional vector with the upper bounds 
     
-    Returns a n-dimensional vector.
+    Modifies d to be the new direction and returns a message about the chosen direction
 
 """
-function trsbox(n, gk, Gk, xk, Δ, a, b)
+function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
 
     #Initializes some variables and vectors.
     α = 0.0
@@ -43,7 +44,6 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
     pgGdo = 0.0
     norm2_proj_d = 0.0
     norm2_proj_grad_xd = 0.0
-    d = zeros(n)
     s = zeros(n)
     d_old = zeros(n)
     Gd = zeros(n)
@@ -53,6 +53,9 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
     grad_xd = zeros(n)
     proj_d = zeros(n)
     proj_grad_xd = zeros(n)
+
+    # Set the entries of d to null
+    d .= 0.0
 
     # Calculates the set of active restrictions and the first search direction
     I = active_set(n, gk, xk, a, b)
@@ -125,14 +128,16 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
                     # Calculate some curvature information
                     mul!(Gs, Gk, s)
                     sGs = dot(s, Gs)
-                    dGs = dot(gk, Gs)
+                    dGs = dot(d, Gs)
+                    sg = dot(s, gk)
+                    pdg = dot(proj_d, gk)
                     mul!(Gpd, Gk, proj_d)
                     dGpd = dot(d, Gpd)
                     sGpd = dot(s, Gpd)
-                    pdGpd = dot(pd, Gpd)
+                    pdGpd = dot(proj_d, Gpd)
 
                     # Calculate the new direction d
-                    indexes, value = calculate_theta!(n, xk, proj_d, s, a, b, sGs, dGs, dGpd, sGpd, pdGpd, d)
+                    indexes, value = calculate_theta!(n, xk, proj_d, s, a, b, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd, d)
 
                     # Updates the set of indexes of the fixed bounds.
                     push!(I, indexes)
