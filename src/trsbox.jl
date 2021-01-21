@@ -43,15 +43,6 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
     pgGdo = 0.0
     norm2_proj_d = 0.0
     norm2_proj_grad_xd = 0.0
-    #index = 0
-    #aux_1 = 0.0
-    #aux_2 = 0.0
-    #aux_3 = 0.0
-    #aux_4 = 0.0
-    #aux_vector_1 = zeros(n)
-    #aux_vector_2 = zeros(n)
-    #aux_vector_3 = zeros(n)
-    #aux_vector_4 = zeros(n)
     d = zeros(n)
     s = zeros(n)
     d_old = zeros(n)
@@ -205,6 +196,7 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
                 msg = "Stopping criterion for α_Q has been reached"
                 return d, msg
             else
+                # Calculate some curvature information
                 pgGd = dot(proj_grad_xd, Gd)
                 pgGdo = dot(proj_grad_xd, Gdo)
                 sGdo = dot(s, Gdo)
@@ -216,7 +208,4 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
             end
         end
     end
-
-    return d
-
 end
