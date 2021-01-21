@@ -103,7 +103,7 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
         # Computes ∇Q(xk + d), P_I(∇Q(xk + d)) and ||P_I(∇Q(xk + d))||^2     
         grad_xd .= gk .+ Gd
         projection_active_set!(grad_xd, I, proj_grad_xd)
-        norm2_proj_grad_xd = dot(aux_vector_2, aux_vector_2)
+        norm2_proj_grad_xd = dot(proj_grad_xd, proj_grad_xd)
 
         # Computes P_I(d) and ||P_I(d)||^2
         projection_active_set!(d, I, proj_d)
@@ -159,27 +159,39 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
                     # Computes ∇Q(xk + d), P_I(∇Q(xk + d)) and ||P_I(∇Q(xk + d))||^2     
                     grad_xd .= gk .+ Gd
                     projection_active_set!(grad_xd, I, proj_grad_xd)
-                    norm2_proj_grad_xd = dot(aux_vector_2, aux_vector_2)
+                    norm2_proj_grad_xd = dot(proj_grad_xd, proj_grad_xd)
 
                     # Computes P_I(d) and ||P_I(d)||^2
                     projection_active_set!(d, I, proj_d)
                     norm2_proj_d = dot(proj_d, proj_d)
-
                 end
             end          
         end
 
         # α_B is chosen
         if index_α == 2
+
+            # Updates the set of indexes of the fixed bounds.
             push!(I, indexes)
+
+            # Computes ∇Q(xk + d), P_I(∇Q(xk + d)) and ||P_I(∇Q(xk + d))||^2     
+            grad_xd .= gk .+ Gd
+            projection_active_set!(grad_xd, I, proj_grad_xd)
+            norm2_proj_grad_xd = dot(proj_grad_xd, proj_grad_xd)
+
+            # Computes P_I(d) and ||P_I(d)||^2
+            projection_active_set!(d, I, proj_d)
+            norm2_proj_d = dot(proj_d, proj_d)
             
-            if sqrt(aux_1) * Δ + 1.0e-2 * aux_2 <= 0.0
-                return d
+            # Stop Criteria evaluation (inequality 3.4)
+            if stopping_criterion_34(Δ, norm2_proj_grad_xd, dg, dGd)
+                msg = "Stopping criterion for α_B has been reached"
+                return d, msg
             else
-                s .= .- aux_vector_2
+                # New search direction
+                s .= .- proj_grad_xd
                 continue
             end
-
         end
 
         # α_Q is chosen
@@ -213,4 +225,3 @@ function trsbox(n, gk, Gk, xk, Δ, a, b)
     return d
 
 end
-
