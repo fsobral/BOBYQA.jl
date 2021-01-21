@@ -163,6 +163,53 @@ function new_search_direction!(proj_d, proj_grad, norm2_proj_d, norm2_proj_grad,
     
 end
 
+function stop_condition_theta_B(θ; n, x, d, s, proj_d, a, b)
+    sin_θ = sin(θ)
+    cos_θ = cos(θ)
+    
+    for i=1:n
+        if ((a[i] - x[i] - d[i] + proj_d[i]) > (cos_θ * proj_d[i] + sin_θ * s[i])) || ((b[i] - x[i] - d[i] + proj_d[i]) < (cos_θ * proj_d[i] + sin_θ * s[i]))
+            return false
+        end
+    end
+
+    return true
+end
+
+function stop_condition_theta_Q(θ; sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd)
+    sin_θ = sin(θ)
+    cos_θ = cos(θ)
+
+    if (- sin_θ * pdg + cos_θ * sg - sin_θ * dGpd + cos_θ * dGs + sin_θ * cos_θ * sGs - sin_θ * (cos_θ - 1.0) pdGpd + (cos_θ ^ 2.0 - sin_θ ^ 2.0 - cos_θ) * sGpd) >= 0.0
+        return false
+    else
+        return true
+    end
+end
+
+function binary_search(lower_value, upper_value, stop_condition, ε)
+    if stop_condition(upper_value)
+        return upper_value
+    else
+        while true
+            mean_value = (lower_value + upper_value) / 2.0
+            if stop_condition(mean_value)
+                if (upper_value - mean_value) <= ε
+                    return mean_value
+                else
+                    lower_value = mean_value
+                end
+            else
+                if (mean_value - lower_value) <= ε
+                    return mean_value
+                else
+                    upper_value = mean_value
+                end
+            end
+        end
+    end
+end
+
 """
 
     calculate_theta!(n, x, proj_d, s, a, b, sGs, dGs, dGpd, sGpd, pdGpd, d)
