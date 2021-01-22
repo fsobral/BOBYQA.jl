@@ -94,7 +94,7 @@
         n_pd = dot(pd, pd)
         n_pg = dot(pg, pg)
 
-        new_search_direction!(pd, pg, n_pd, n_pg, v)
+        BOBYQA.new_search_direction!(pd, pg, n_pd, n_pg, v)
         @test(v == [0.0, 0.0])
 
         v = rand(n)
@@ -103,7 +103,7 @@
         n_pd = dot(pd, pd)
         n_pg = dot(pg, pg)
         
-        new_search_direction!(pd, pg, n_pd, n_pg, v)
+        BOBYQA.new_search_direction!(pd, pg, n_pd, n_pg, v)
         @test(v == [0.0, - 1.0])
 
         v = rand(n)
@@ -112,9 +112,29 @@
         n_pd = dot(pd, pd)
         n_pg = dot(pg, pg)
         
-        new_search_direction!(pd, pg, n_pd, n_pg, v)
+        BOBYQA.new_search_direction!(pd, pg, n_pd, n_pg, v)
         @test(v == [1.0, - 1.0])
 
     end
     
+    @testset "stop_condition_theta_B" begin
+        
+        θ = pi / 4
+        n = 2
+        x = ones(n)
+        d = ones(n)
+        s = ones(n)
+        pd = ones(n)
+        a = ones(n)
+        b = 3 * ones(n)
+        @test(BOBYQA.stop_condition_theta_B(θ, n, x, d, s, pd, a, b) == true)
+
+        d = - 5.0 * ones(n)
+        @test(BOBYQA.stop_condition_theta_B(θ, n, x, d, s, pd, a, b) == false)
+
+        d = [1.0, - 5.0]
+        @test(BOBYQA.stop_condition_theta_B(θ, n, x, d, s, pd, a, b) == false)
+
+    end
+
 end
