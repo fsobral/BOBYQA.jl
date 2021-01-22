@@ -309,7 +309,7 @@ function calculate_theta!(n, x, proj_d, s, a, b, sg, pdg, sGs, dGs, dGpd, sGpd, 
     θ = min(θ_B, θ_Q)
 
     # Computes d(Θ)
-    d .= d .+ x .- proj_d + cos(θ) * proj_d + sin(θ) * s
+    d .= d .- proj_d + cos(θ) * proj_d + sin(θ) * s
 
     # Computes the indexes of the fixed bounds,
     for i = 1:n

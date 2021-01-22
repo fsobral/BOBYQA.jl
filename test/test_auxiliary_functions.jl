@@ -175,4 +175,22 @@
 
     end
 
+    @testset "" begin
+
+        n = 2
+        x = ones(n)
+        d = ones(n)
+        s = ones(n)
+        pd = ones(n)
+        a = ones(n)
+        b = 3 * ones(n)
+
+        index_list, bool_value = BOBYQA.calculate_theta!(n, x, pd, s, a, b, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, d)
+        @test(bool_value = false)
+        @test(d == sqrt(2) * ones(n))
+        @test(index_list = [])
+
+
+    end
+
 end
