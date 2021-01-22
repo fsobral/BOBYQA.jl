@@ -144,21 +144,27 @@ function new_search_direction!(proj_d, proj_grad, norm2_proj_d, norm2_proj_grad,
     β = 0.0
     aux = 0.0
 
-    if pdpg == 0
+    # If P_I(d)'P_I(∇Q(xk+d)) = 0, then the new direction is a multiple of P_I(∇Q(xk+d))
+    if isapprox(pdpg, 0.0; atol = eps(Float64), rtol = 0.0)
         β = - sqrt(norm2_proj_d / norm2_proj_grad)
         v .= β .* proj_grad
     else
+        # If ||P_I(d)||^2 * ||P_I(∇Q(xk+d))|| = (P_I(d)'P_I(∇Q(xk+d)))^2, then we have a inconsistence and the new direction is set to zero
         aux = ((norm2_proj_d ^ 2.0 * norm2_proj_grad) / (pdpg)) - norm2_proj_d
-        α = - sqrt(aux * norm2_proj_d) / aux
-        β = - α * norm2_proj_d / pdpg
-
-        # Checks if β < (- α * P_I(d)'P_I(∇Q(xk+d)) / ||P_I(∇Q(xk+d))||^2) 
-        if β >= (- α * pdpg / norm2_proj_grad)
-            α = norm2_proj_d / sqrt(aux * norm2_proj_d)
+        if isapprox(aux, 0.0; atol = eps(Float64), rtol = 0.0)
+            v .= 0.0
+        else
+            α = - sqrt(aux * norm2_proj_d) / aux
             β = - α * norm2_proj_d / pdpg
-        end
+
+            # Checks if β < (- α * P_I(d)'P_I(∇Q(xk+d)) / ||P_I(∇Q(xk+d))||^2) 
+            if β >= (- α * pdpg / norm2_proj_grad)
+                α = norm2_proj_d / sqrt(aux * norm2_proj_d)
+                β = - α * norm2_proj_d / pdpg
+            end
         
-        v .= α .* proj_d .+ β .* proj_grad
+            v .= α .* proj_d .+ β .* proj_grad
+        end
     end
     
 end
