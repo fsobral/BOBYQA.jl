@@ -137,4 +137,26 @@
 
     end
 
+    @testset "stop_condition_theta_Q" begin
+
+        θ = pi / 4
+        @test(BOBYQA.stop_condition_theta_Q(θ, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) == false)
+
+        θ = pi / 6
+        @test(BOBYQA.stop_condition_theta_Q(θ, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) == false)
+
+        θ = pi / 4
+        @test(BOBYQA.stop_condition_theta_Q(θ, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0) == false)
+
+        θ = pi / 6
+        @test(BOBYQA.stop_condition_theta_Q(θ, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0) == false)
+
+        θ = pi / 4
+        @test(BOBYQA.stop_condition_theta_Q(θ, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0) == true)
+
+        θ = pi / 6
+        @test(BOBYQA.stop_condition_theta_Q(θ, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0) == true)
+        
+    end
+
 end
