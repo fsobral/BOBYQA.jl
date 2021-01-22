@@ -241,6 +241,26 @@
 
     end
 
-    
+    @testset "stopping_criterion_35" begin
+        
+        pd = [1.0, 0.0]
+        pg = [0.0, 1.0]
+        n2_pd = dot(pd, pd)
+        n2_pg = dot(pg, pg)
+        dg = 1.0
+        dgd = 1.0
+
+        @test(BOBYQA.stopping_criterion_35(pd, pg, n2_pd, n2_pg, dg, dGd) == false)
+
+        pd = [1.0, 0.0]
+        pg = [1.0, 0.0]
+        n2_pd = dot(pd, pd)
+        n2_pg = dot(pg, pg)
+        dg = - 1.0
+        dgd = - 1.0
+
+        @test(BOBYQA.stopping_criterion_35(pd, pg, n2_pd, n2_pg, dg, dGd) == true)
+
+    end
 
 end
