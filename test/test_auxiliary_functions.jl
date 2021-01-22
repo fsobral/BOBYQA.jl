@@ -212,15 +212,35 @@
         dg = 1.0
         dGd = 1.0
 
-        @test(BOBYQA.stopping_criterion_34(Δ, norm2_proj_grad, dg, dGd) == false)
+        @test(BOBYQA.stopping_criterion_34(Δ, n2_pg, dg, dGd) == false)
 
         Δ = 1.0
         n2_pg = 0.01
         dg = 1.0
         dGd = 1.0
 
-        @test(BOBYQA.stopping_criterion_34(Δ, norm2_proj_grad, dg, dGd) == true)
-        
+        @test(BOBYQA.stopping_criterion_34(Δ, n2_pg, dg, dGd) == true)
+
     end
+
+    @testset "stopping_criterion_34_B" begin
+        
+        dg = 1.0
+        dog = 1.0
+        dGd = 1.0
+        doGdo = 1.0
+
+        @test(BOBYQA.stopping_criterion_34_B(dg, dog, dGd, doGdo) == false)
+
+        dg = 0.0
+        dog = 0.0
+        dGd = 1.0
+        doGdo = 1.0
+
+        @test(BOBYQA.stopping_criterion_34_B(dg, dog, dGd, doGdo) == true)
+
+    end
+
+    
 
 end
