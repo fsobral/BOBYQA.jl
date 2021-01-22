@@ -49,5 +49,72 @@
         @test(proj_v[acts] == zeros(5))
         
     end
+
+    @testset "calculate_alpha" begin
+    
+        n = 10
+        x = ones(n)
+        d = 0.5 * ones(n)
+        s = 0.5 * ones(n)
+        Δ = 1.0
+        a = ones(n)
+        b = 2.0 * ones(n)
+        sg = 1.0
+        sGd = 1.0
+        sGs = 1.0
+
+        α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+        @test(α == -1.0)
+        @test(index_α == 3)
+        @test(index_list == [])
+
+        s = - 0.5 * ones(n)
+        sg = - 5.0
+
+        α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+        @test(α == 1.0)
+        @test(index_α == 2)
+        @test(lenght(index_list) == n)
+
+        Δ = 0.5
+
+        α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+        @test(α == 0.0)
+        @test(index_α == 1)
+        @test(lenght(index_list) == [])
+
+    end
+
+    @testset "new_search_direction" begin
+        n = 2
+
+        v = rand(n)
+        pd = [1.0, 0.0]
+        pg = [1.0, 0.0]
+        n_pd = dot(pd, pd)
+        n_pg = dot(pg, pg)
+
+        new_search_direction!(pd, pg, n_pd, n_pg, v)
+        @test(v == [0.0, 0.0])
+
+        v = rand(n)
+        pd = [1.0, 0.0]
+        pg = [0.0, 1.0]
+        n_pd = dot(pd, pd)
+        n_pg = dot(pg, pg)
+        
+        new_search_direction!(pd, pg, n_pd, n_pg, v)
+        @test(v == [0.0, - 1.0])
+
+        v = rand(n)
+        pd = [1.0, 1.0]
+        pg = [0.0, 1.0]
+        n_pd = dot(pd, pd)
+        n_pg = dot(pg, pg)
+        
+        new_search_direction!(pd, pg, n_pd, n_pg, v)
+        @test(v == [1.0, - 1.0])
+
+    end
     
 end
