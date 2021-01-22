@@ -69,7 +69,7 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
     end
 
     # Stop Criteria evaluation
-    if dot(s, s) == 0.0
+    if isapprox(dot(s, s), 0.0; atol = eps(Float64), rtol = 0.0)
         msg = "The initial search direction is null."
         return zeros(n), msg
     end
