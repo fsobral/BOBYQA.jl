@@ -156,7 +156,23 @@
 
         θ = pi / 6
         @test(BOBYQA.stop_condition_theta_Q(θ, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0) == true)
-        
+
+    end
+
+    @testset "binary_search" begin
+        function stop_cond(a)
+            return a < 0.2
+        end
+
+        value = BOBYQA.binary_search(0.0, 1.0, stop_cond, 1.0e-1)
+        @test(value == 0.1875)
+
+        value = BOBYQA.binary_search(- 2.0, 1.0, stop_cond, 1.0e-1)
+        @test(value == 0.15625)
+
+        value = BOBYQA.binary_search(- 2.0, 0.0, stop_cond, 1.0e-1)
+        @test(value == 0.0)
+
     end
 
 end
