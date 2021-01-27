@@ -139,21 +139,12 @@
 
         v = rand(n)
         pd = [1.0, 0.0]
-        pg = [1.0, 0.0]
-        n_pd = dot(pd, pd)
-        n_pg = dot(pg, pg)
-
-        BOBYQA.new_search_direction!(pd, pg, n_pd, n_pg, v)
-        @test(v == [0.0, 0.0])
-
-        v = rand(n)
-        pd = [1.0, 0.0]
         pg = [0.0, 1.0]
         n_pd = dot(pd, pd)
         n_pg = dot(pg, pg)
         
         BOBYQA.new_search_direction!(pd, pg, n_pd, n_pg, v)
-        @test(v == [0.0, - 1.0])
+        @test(isapprox(v, [0.0, - 1.0], atol = 1.0e-1))
 
         v = rand(n)
         pd = [1.0, 1.0]
@@ -162,7 +153,7 @@
         n_pg = dot(pg, pg)
         
         BOBYQA.new_search_direction!(pd, pg, n_pd, n_pg, v)
-        @test(v == [1.0, - 1.0])
+        @test(isapprox(v, [1.0, - 1.0], atol = 1.0e-1))
 
     end
     
