@@ -7,5 +7,6 @@ using LinearAlgebra
 # Main module
 
 include("auxiliary_functions.jl")
+include("trsbox.jl")
 
 end
