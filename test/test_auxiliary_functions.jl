@@ -64,24 +64,41 @@
         sGs = 1.0
 
         α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
-        @test(α == -1.0)
+        @test(α == - 2.0)
         @test(index_α == 3)
         @test(index_list == [])
 
+        n = 10
+        x = ones(n)
+        d = 0.5 * ones(n)
         s = - 0.5 * ones(n)
+        Δ = 1.0
+        a = ones(n)
+        b = 2.0 * ones(n)
         sg = - 5.0
+        sGd = 1.0
+        sGs = 1.0
 
         α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
         @test(α == 1.0)
         @test(index_α == 2)
-        @test(lenght(index_list) == n)
+        @test(length(index_list) == n)
 
+        n = 10
+        x = ones(n)
+        d = 0.5 * ones(n)
+        s = - 0.5 * ones(n)
         Δ = 0.5
-
+        a = ones(n)
+        b = 2.0 * ones(n)
+        sg = - 5.0
+        sGd = 1.0
+        sGs = 1.0
+        
         α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
-        @test(α == 0.0)
-        @test(index_α == 1)
-        @test(lenght(index_list) == [])
+        @test(α == 1.0)
+        @test(index_α == 2)
+        @test(length(index_list) == n)
 
     end
 
