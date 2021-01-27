@@ -100,6 +100,38 @@
         @test(index_α == 2)
         @test(length(index_list) == n)
 
+        n = 10
+        x = ones(n)
+        d = ones(n)
+        s = ones(n)
+        Δ = 1.0
+        a = zeros(n)
+        b = 5.0 * ones(n)
+        sg = - 2.0
+        sGd = 1.0
+        sGs = 1.0
+        
+        α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+        @test(α == 0.0)
+        @test(index_α == 1)
+        @test(index_list == [ ])
+
+        n = 3
+        x = ones(n)
+        d = [0.5, 1.0, 0.5]
+        s = [- 0.5, 1.0, 0.5]
+        Δ = 1.0
+        a = [1.0, 0.0, 1.0]
+        b = [2.0, 5.0, 2.0]
+        sg = - 5.0
+        sGd = 1.0
+        sGs = 1.0
+        
+        α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+        @test(α == 0.0)
+        @test(index_α == 1)
+        @test(index_list == [ ])
+
     end
 
     @testset "new_search_direction" begin
