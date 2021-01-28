@@ -61,13 +61,13 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
     # Stop Criteria evaluation
     if length(I) == n
         msg = "All bounds restrictions are active."
-        return d, msg
+        return msg
     end
 
     # Stop Criteria evaluation
     if isapprox(dot(s, s), 0.0; atol = eps(Float64), rtol = 0.0)
         msg = "The initial search direction is null."
-        return zeros(n), msg
+        return msg
     end
 
     # Note that, for the first iteration, we have sGd = 0.0
@@ -109,7 +109,7 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
                 # Stop Criteria evaluation (inequality 3.5)
                 if stopping_criterion_35(proj_d, proj_grad_xd, norm2_proj_d, norm2_proj_grad_xd, dg, dGd)
                     msg = "Stopping criterion for α_Δ has been reached"
-                    return d, msg
+                    return msg
                 else
 
                     # Save old information about direction d
@@ -147,7 +147,7 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
                     if value == true                       
                         if stopping_criterion_34_B(dg, dog, dGd, doGdo) 
                             msg = "Stopping criterion for α_Δ with the choice of θ_Q has been reached"
-                            return d, msg
+                            return msg
                         end
                     end
 
@@ -181,7 +181,7 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
             # Stop Criteria evaluation (inequality 3.4)
             if stopping_criterion_34(Δ, norm2_proj_grad_xd, dg, dGd)
                 msg = "Stopping criterion for α_B has been reached"
-                return d, msg
+                return msg
             else
                 # New search direction s
                 s .= .- proj_grad_xd
@@ -195,7 +195,7 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
             # Stop Criteria evaluation (inequality 3.4 and inequality 3.4 modified)
             if stopping_criterion_34(Δ, norm2_proj_grad_xd, dg, dGd) || stopping_criterion_34_B(dg, dog, dGd, doGdo)
                 msg = "Stopping criterion for α_Q has been reached"
-                return d, msg
+                return msg
             else
                 # Calculate some curvature information
                 pgGd = dot(proj_grad_xd, Gd)
