@@ -336,7 +336,11 @@ end
 
 """
 function stopping_criterion_34(Δ, norm2_proj_grad, dg, dGd)
-    return isapprox(sqrt(norm2_proj_grad) * Δ + 1.0e-2 * (dg + 0.5 * dGd), 0.0; atol = eps(Float64), rtol = 0.0)
+    if (sqrt(norm2_proj_grad) * Δ + 1.0e-2 * (dg + 0.5 * dGd)) <= 0.0
+        return true
+    else
+        return false
+    end
 end
 
 """
@@ -354,7 +358,11 @@ end
 
 """
 function stopping_criterion_34_B(dg, dog, dGd, doGdo)
-    return isapprox(1.01 * (dog + 0.5 * doGdo) - dg - 0.5 * dGd, 0.0; atol = eps(Float64), rtol = 0.0)
+    if (1.01 * (dog + 0.5 * doGdo) - dg - 0.5 * dGd) <= 0.0
+        return true
+    else
+        return false
+    end
 end
 
 """
@@ -374,5 +382,9 @@ end
 
 """
 function stopping_criterion_35(proj_d, proj_grad, norm2_proj_d, norm2_proj_grad, dg, dGd)
-    return isapprox(norm2_proj_d * norm2_proj_grad - dot(proj_d, proj_grad) ^ 2.0 - 1.0e-4 * (- dg - 0.5 * dGd) ^ 2.0, 0.0; atol = eps(Float64), rtol = 0.0)
+    if (norm2_proj_d * norm2_proj_grad - dot(proj_d, proj_grad) ^ 2.0 - 1.0e-4 * (- dg - 0.5 * dGd) ^ 2.0) <= 0.0
+        return true
+    else
+        return false
+    end
 end
