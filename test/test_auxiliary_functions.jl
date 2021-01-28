@@ -234,18 +234,18 @@
 
     @testset "calculate_theta!" begin
 
-        #n = 2
-        #x = ones(n)
-        #d = ones(n)
-        #s = ones(n)
-        #pd = ones(n)
-        #a = ones(n)
-        #b = 3 * ones(n)
+        n = 2
+        x = ones(n)
+        d = ones(n)
+        s = ones(n)
+        pd = ones(n)
+        a = ones(n)
+        b = 3 * ones(n)
 
-        #index_list, bool_value = BOBYQA.calculate_theta!(n, x, pd, s, a, b, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, d)
-        #@test(bool_value == false)
-        #@test(isapprox(d, sqrt(2.0) * ones(n), atol = 1.0e-1))
-        #@test(index_list == [ ])
+        index_list, bool_value = BOBYQA.calculate_theta!(n, x, pd, s, a, b, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, d)
+        @test(bool_value == false)
+        @test(isapprox(d, sqrt(2.0) * ones(n), atol = 1.0e-1))
+        @test(index_list == [ ])
 
         n = 2
         x = ones(n)
