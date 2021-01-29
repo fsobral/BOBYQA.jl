@@ -57,6 +57,29 @@ end
 
 """
 
+    update_active_set!(index_set, index_list)
+
+    Checks whether the values in index_list are present in index_set and adds values that are not
+
+    - 'index_set': list with the indices of the active constraints
+    - 'index_list': list with the new indices that are active constraints
+
+    Modify index_set to the new index list
+
+"""
+function update_active_set!(index_set, index_list)
+    m = length(index_list)
+
+    for i = 1:m
+        if index_list[i] ∉ index_set
+            push!(index_set, index_list[i])
+        end
+    end
+
+end
+
+"""
+
     calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
 
     Determines the stepsize α, which will be the minimum value between α_Δ, α_B and α_Q
