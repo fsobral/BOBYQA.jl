@@ -49,17 +49,17 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
     grad_xd = zeros(n)
     proj_d = zeros(n)
     proj_grad_xd = zeros(n)
+    index_set = []
 
     # Set the entries of d to null
     d .= 0.0
 
     # Calculates the set of active restrictions and the first search direction
-    I = active_set(n, gk, xk, a, b)
-    projection_active_set!(gk, I, s)
-    s .= .-s
+    active_set!(n, gk, xk, a, b, index_set)
+    projection_active_set!(- gk, index_set, s)
 
     # Stop Criteria evaluation
-    if length(I) == n
+    if length(index_set) == n
         msg = "All bounds restrictions are active."
         return msg
     end
@@ -99,7 +99,7 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
         norm2_proj_grad_xd = dot(proj_grad_xd, proj_grad_xd)
 
         # Computes P_I(d) and ||P_I(d)||^2
-        projection_active_set!(d, I, proj_d)
+        projection_active_set!(d, index_set, proj_d)
         norm2_proj_d = dot(proj_d, proj_d)
         
         # α_Δ is chosen
@@ -136,7 +136,7 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
                     indexes, value = calculate_theta!(n, xk, proj_d, s, a, b, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd, d)
 
                     # Updates the set of indexes of the fixed bounds.
-                    push!(I, indexes)
+                    update_active_set!(index_set, indexes)
 
                     # Calculate some curvature information
                     dg = dot(d, gk)
@@ -153,11 +153,11 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
 
                     # Computes ∇Q(xk + d), P_I(∇Q(xk + d)) and ||P_I(∇Q(xk + d))||^2     
                     grad_xd .= gk .+ Gd
-                    projection_active_set!(grad_xd, I, proj_grad_xd)
+                    projection_active_set!(grad_xd, index_set, proj_grad_xd)
                     norm2_proj_grad_xd = dot(proj_grad_xd, proj_grad_xd)
 
                     # Computes P_I(d) and ||P_I(d)||^2
-                    projection_active_set!(d, I, proj_d)
+                    projection_active_set!(d, index_set, proj_d)
                     norm2_proj_d = dot(proj_d, proj_d)
                 end
             end          
@@ -167,15 +167,15 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
         if index_α == 2
 
             # Updates the set of indexes of the fixed bounds.
-            push!(I, indexes)
+            update_active_set!(index_set, indexes)
 
             # Computes ∇Q(xk + d), P_I(∇Q(xk + d)) and ||P_I(∇Q(xk + d))||^2     
             grad_xd .= gk .+ Gd
-            projection_active_set!(grad_xd, I, proj_grad_xd)
+            projection_active_set!(grad_xd, index_set, proj_grad_xd)
             norm2_proj_grad_xd = dot(proj_grad_xd, proj_grad_xd)
 
             # Computes P_I(d) and ||P_I(d)||^2
-            projection_active_set!(d, I, proj_d)
+            projection_active_set!(d, index_set, proj_d)
             norm2_proj_d = dot(proj_d, proj_d)
             
             # Stop Criteria evaluation (inequality 3.4)
