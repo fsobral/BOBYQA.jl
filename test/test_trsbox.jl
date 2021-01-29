@@ -73,5 +73,22 @@
 
     end
 
+    @testset "Exit condition: α_Δ criterion" begin
+        
+        n = 2    
+        g = ones(n)
+        G = Matrix{Float64}(I, n, n)
+        x = 2.0 * ones(n)
+        Δ = 1.0
+        a = - ones(n)
+        b = 3.0 * ones(n)
+        d = rand(n)
+
+        msg = BOBYQA.trsbox!(n, g, G, x, Δ, a, b, d)
+
+        @test(isapprox(d, - ones(n), atol = 1.0e-1))
+        @test(msg == "Stopping criterion for α_Δ has been reached")
+
+    end
 
 end
