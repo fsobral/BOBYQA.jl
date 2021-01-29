@@ -9,20 +9,28 @@
         b = 2 * ones(n)
 
         x = [1, 1]
-        @test( BOBYQA.active_set(n, g, x, a, b) == [1, 2] )
+        indexes = [ ]
+        BOBYQA.active_set!(n, g, x, a, b, indexes)
+        @test( indexes == [1, 2] )
 
         x = [2, 2]
-        @test( BOBYQA.active_set(n, g, x, a, b) == [] )
+        indexes = [ ]
+        BOBYQA.active_set!(n, g, x, a, b, indexes)
+        @test( indexes == [ ] )
 
         x = [1.5, 1]
-        @test( BOBYQA.active_set(n, g, x, a, b) == [2] )
+        indexes = [ ]
+        BOBYQA.active_set!(n, g, x, a, b, indexes)
+        @test( indexes == [2] )
 
         # Test the case where the variable is fixed (maybe remove the
         # variable before?)
         a[1] = b[1]
 
         x = [2, 2]
-        @test( BOBYQA.active_set(n, g, x, a, b) == [1] )
+        indexes = [ ]
+        BOBYQA.active_set!(n, g, x, a, b, indexes)
+        @test( indexes == [1] )
         
     end
 
