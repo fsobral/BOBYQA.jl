@@ -95,7 +95,7 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
 
         # Computes ∇Q(xk + d), P_I(∇Q(xk + d)) and ||P_I(∇Q(xk + d))||^2     
         grad_xd .= gk .+ Gd
-        projection_active_set!(grad_xd, I, proj_grad_xd)
+        projection_active_set!(grad_xd, index_set, proj_grad_xd)
         norm2_proj_grad_xd = dot(proj_grad_xd, proj_grad_xd)
 
         # Computes P_I(d) and ||P_I(d)||^2
