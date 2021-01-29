@@ -6,7 +6,7 @@
 
 """
 
-    active_set(g, x, a, b)
+    active_set!(n, g, x, a, b, index_set)
 
     Constructs the set of active constraints
 
@@ -15,20 +15,18 @@
     - 'x': n-dimensional vector (current iterate)
     - 'a': n-dimensional vector with the lower bounds
     - 'b': n-dimensional vector with the upper bounds
+    - 'index_set': empty list
 
-    Returns a list with the indices that are fixed at the bounds
+    Modify index_set to return a list with the indices that are fixed at the bounds
 
 """
-function active_set(n, g, x, a, b)
-    index_list = []
+function active_set!(n, g, x, a, b, index_set)
 
     for i=1:n
         if ( x[i] == a[i] && g[i] >= 0.0 ) || ( x[i] == b[i] && g[i] <= 0.0 )
-            push!(index_list, i)
+            push!(index_set, i)
         end
     end
-
-    return index_list
 
 end
 
