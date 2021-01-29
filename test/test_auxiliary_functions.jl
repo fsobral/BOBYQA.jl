@@ -58,6 +58,35 @@
         
     end
 
+    @testset "update_active_set" begin
+
+        index_set = [ ]
+        index_list = [ ]
+        BOBYQA.update_active_set!(index_set, index_list)
+        @test(index_set == [ ])
+
+        index_set = [ ]
+        index_list = [1, 2]
+        BOBYQA.update_active_set!(index_set, index_list)
+        @test(index_set == [1, 2])
+
+        index_set = [3, 4, 5]
+        index_list = [ ]
+        BOBYQA.update_active_set!(index_set, index_list)
+        @test(index_set == [3, 4, 5])
+
+        index_set = [2, 4, 6]
+        index_list = [7, 9]
+        BOBYQA.update_active_set!(index_set, index_list)
+        @test(index_set == [2, 4, 6, 7, 9])
+
+        index_set = [1, 2, 3, 4, 5]
+        index_list = [2, 4, 5, 6, 8]
+        BOBYQA.update_active_set!(index_set, index_list)
+        @test(index_set == [1, 2, 3, 4, 5, 6, 8])
+    
+    end
+
     @testset "calculate_alpha" begin
     
         n = 10
