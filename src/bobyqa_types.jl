@@ -23,12 +23,21 @@ struct BOBYQA_Hessian
     Y :: AbstractMatrix
 
     # Constructor for checking dimensions
-    BOBYQA_Hessian(M, μ, Y) = size(Y) != (size(M)[1], length(μ)) ? throw(DimensionMismatch("The dimension of the elements does not match.")) : new(M, μ, Y)
+    BOBYQA_Hessian(M, μ, Y) = size(Y) != (size(M)[1], length(μ)) ?
+        throw(DimensionMismatch("The dimension of the elements does not match.")) :
+        new(M, μ, Y)
                                
 end
 
+"""
+
+    BOBYQA_Hessian(n, m)
+
+Creates an empty structure, ready to be filled.
+
+"""
 BOBYQA_Hessian(n, m) = BOBYQA_Hessian(Matrix{Float64}(undef, n, n),
-                                      zeros(Float64, m),
+                                      Vector{Float64}(undef, m),
                                       Matrix{Float64}(undef, n, m))
 
 """

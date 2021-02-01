@@ -14,6 +14,12 @@
 
         # Dimension error
         @test_throws(DimensionMismatch, BOBYQA_Hessian(M, [1, 2], Y))
+
+        # Empty type
+        Q = BOBYQA_Hessian(5, 2)
+        @test(size(Q.M) == (5, 5))
+        @test(length(Q.μ) == 2)
+        @test(size(Q.Y) == (5, 2))
         
     end
 
