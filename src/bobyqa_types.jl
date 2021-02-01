@@ -1,5 +1,3 @@
-export BOBYQA_Hessian, mul!
-
 """
 
     BOBYQA_Hessian{T}
@@ -15,14 +13,14 @@ interpolation problem and `Y = [y_1 ... y_n]` is a matrix whose
 columns are the interpolation points of the model.
 
 """
-struct BOBYQA_Hessian{T<:Number}
+struct BOBYQA_Hessian
 
     # Matrix M is a full matrix
-    M :: AbstractMatrix{T}
-    # List of vectors Y
-    Y :: AbstractMatrix{T}
+    M :: AbstractMatrix
     # Lagrange multipliers for MFN-models
-    μ :: AbstractVector{T}
+    μ :: AbstractVector
+    # List of vectors Y
+    Y :: AbstractMatrix
 
 end
 
@@ -34,15 +32,15 @@ Calculates the matrix-vector product `Q*v`, where `Q` is a matrix
 stored using the BOBYQA format for Hessians. Returns a new vector.
 
 """
-function Base.:*(Q::BOBYQA_Hessian{T}, v::AbstractVector{T}) where {T}
+function Base.:*(Q::BOBYQA_Hessian, v::AbstractVector)
 
     # Usual multiplication
     qv = Q.M * v
-
+    
     # Perform μ_j * y_j * y_j^T * v
-    @views for j = length(Q.μ)
+    @views for j = 1:length(Q.μ)
         y = Q.Y[:, j]
-        qv .+= μ[j] * dot(y, v) .* y
+        qv .= qv .+ Q.μ[j] .* dot(y, v) .* y
     end
 
     return qv
@@ -59,17 +57,19 @@ using the BOBYQA format for Hessians, and stores the result in vector
 `Y`. `Y` **cannot point** to any part of `A` or `b`.
 
 """
-function mul!(Y::AbstractVector{T}, A::BOBYQA_Hessian{T}, b::AbstractVector{T}) where {T}
-
+function LinearAlgebra.mul!(Y::AbstractVector, A::BOBYQA_Hessian, b::AbstractVector)
     
-    mul!(Y, Q.M, b)
+    LinearAlgebra.mul!(Y, A.M, b)
 
     # Perform μ_j * y_j * y_j^T * v
-    @views for j = length(Q.μ)
-        y = Q.Y[:, j]
-        Y .+= μ[j] * dot(y, v) .* y
+    @views for j = 1:length(A.μ)
+        y = A.Y[:, j]
+        Y .+= A.μ[j] * dot(y, b) .* y
     end
 
     return Y
 
 end
+
+# Export functions
+export BOBYQA_Hessian, mul!
