@@ -11,6 +11,9 @@
         @test(Q.M == M)
         @test(Q.μ == μ)
         @test(Q.Y == Y)
+
+        # Dimension error
+        @test_throws(DimensionMismatch, BOBYQA_Hessian(M, [1, 2], Y))
         
     end
 
