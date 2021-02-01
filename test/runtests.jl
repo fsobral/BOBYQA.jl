@@ -5,3 +5,5 @@ using LinearAlgebra
 include("test_auxiliary_functions.jl")
 
 include("test_trsbox.jl")
+
+include("test_types.jl")
