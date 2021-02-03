@@ -5,12 +5,13 @@
 Immutable type representing the way that BOBYQA stores the Hessian of
 quadratic models, that is
 
-    Q = M + ∑ μ_i y_i y_i^T
+    Q = M + ∑ μ_i (y_i - x0) (y_i - x0)^T
 
 where `M` is a full `n x n` matrix, `μ` represents the `m` Lagrange
 multipliers associated with the solution of the minimum Frobenius-norm
-interpolation problem and `Y = [y_1 ... y_n]` is a matrix whose
-columns are the interpolation points of the model.
+interpolation problem, `Y = [y_1 ... y_n]` is a matrix whose columns
+are the interpolation points of the model and `x0` is the shift (not
+necessarily the current point).
 
 """
 struct BOBYQA_Hessian
@@ -21,11 +22,23 @@ struct BOBYQA_Hessian
     μ :: AbstractVector
     # List of vectors Y
     Y :: AbstractMatrix
+    # Center of the model
+    x0 :: AbstractVector
 
     # Constructor for checking dimensions
-    BOBYQA_Hessian(M, μ, Y) = size(Y) != (size(M)[1], length(μ)) ?
-        throw(DimensionMismatch("The dimension of the elements does not match.")) :
-        new(M, μ, Y)
+    BOBYQA_Hessian(M, μ, Y, x0) = begin
+
+        nm, mm = size(M)
+
+        (nm != mm) && throw(DimensionMismatch("Matrix M should be square."))
+        
+        mmu = length(μ)
+
+        ((size(Y) != (nm, mmu)) || (length(x0) != nm)) && throw(DimensionMismatch("The dimension of the elements does not match."))
+
+        new(M, μ, Y, x0)
+        
+    end
                                
 end
 
@@ -38,7 +51,8 @@ Creates an empty structure, ready to be filled.
 """
 BOBYQA_Hessian(n, m) = BOBYQA_Hessian(Matrix{Float64}(undef, n, n),
                                       Vector{Float64}(undef, m),
-                                      Matrix{Float64}(undef, n, m))
+                                      Matrix{Float64}(undef, n, m),
+                                      zeros(n))
 
 """
 
@@ -52,17 +66,10 @@ function Base.:*(Q::BOBYQA_Hessian, v::AbstractVector)
 
     # Usual multiplication
     qv = Q.M * v
-    
-    # Perform μ_j * y_j * y_j^T * v
-    @views for j = 1:length(Q.μ)
-        y = Q.Y[:, j]
-        qv .= qv .+ Q.μ[j] .* dot(y, v) .* y
-    end
 
-    return qv
+    return add_rank1_mul!(qv, Q, v)
 
 end
-
 
 """
 
@@ -77,10 +84,31 @@ function LinearAlgebra.mul!(Y::AbstractVector, A::BOBYQA_Hessian, b::AbstractVec
     
     LinearAlgebra.mul!(Y, A.M, b)
 
+    return add_rank1_mul!(Y, A, b)
+    
+end
+
+"""
+
+    add_rank1_mul!(Y, Q, v)
+
+Auxiliary function which computes product of `v` with the sum of
+rank-1 matrices given by the shifted interpolation points in `Q.Y`, as
+described in (`mul!`)[ref] and [`*`](ref).
+
+This function assumes that vector `Y` has already been initialized
+with well defined values, since it is added inside.
+
+"""
+function add_rank1_mul!(Y, Q, v)
+
+    # Store x0^T * v
+    x0tv = dot(Q.x0, v)
+    
     # Perform μ_j * y_j * y_j^T * v
-    @views for j = 1:length(A.μ)
-        y = A.Y[:, j]
-        Y .+= A.μ[j] * dot(y, b) .* y
+    @views for j = 1:length(Q.μ)
+        y = Q.Y[:, j]
+        Y .= Y .+ (Q.μ[j] * (dot(y, v) - x0tv)) .* (y .- Q.x0)
     end
 
     return Y
