@@ -8,29 +8,36 @@
         a = ones(n)
         b = 2 * ones(n)
 
-        x = [1, 1]
-        indexes = [ ]
+        x = ones(n)
+        indexes = zeros(Bool, n)
+        sol_indexes = zeros(Bool, n)
+        sol_indexes .= true
         BOBYQA.active_set!(n, g, x, a, b, indexes)
-        @test( indexes == [1, 2] )
+        @test( indexes == sol_indexes )
 
-        x = [2, 2]
-        indexes = [ ]
+        x = 2.0 * ones(2)
+        indexes = zeros(Bool, n)
+        sol_indexes = zeros(Bool, n)
         BOBYQA.active_set!(n, g, x, a, b, indexes)
-        @test( indexes == [ ] )
+        @test( indexes == sol_indexes )
 
         x = [1.5, 1]
-        indexes = [ ]
+        indexes = zeros(Bool, n)
+        sol_indexes = zeros(Bool, n)
+        sol_indexes[2] = true
         BOBYQA.active_set!(n, g, x, a, b, indexes)
-        @test( indexes == [2] )
+        @test( indexes == sol_indexes )
 
         # Test the case where the variable is fixed (maybe remove the
         # variable before?)
         a[1] = b[1]
 
-        x = [2, 2]
-        indexes = [ ]
+        x = 2.0 * ones(2)
+        indexes = zeros(Bool, n)
+        sol_indexes = zeros(Bool, n)
+        sol_indexes[1] = true
         BOBYQA.active_set!(n, g, x, a, b, indexes)
-        @test( indexes == [1] )
+        @test( indexes == sol_indexes )
         
     end
 
@@ -41,49 +48,98 @@
         v = rand(n)
         proj_v = Vector{Float64}(undef, n)
 
-        acts = []
+        acts = zeros(Bool, n)
         BOBYQA.projection_active_set!(v, acts, proj_v)
 
         @test(proj_v == v)
 
-        acts = [1]
+        acts = zeros(Bool, n)
+        acts[1] = true
         BOBYQA.projection_active_set!(v, acts, proj_v)
 
         @test(proj_v[1] == 0.0)
         @test(proj_v[2:n] == v[2:n])
 
-        acts = rand(1:n, 5)
+        acts = zeros(Bool, n)
+        index = rand(1:n, 5)
+        acts[index] .= true
+        sol = zeros(n)
+        copyto!(sol, v)
+        sol[index] .= 0.0
         BOBYQA.projection_active_set!(v, acts, proj_v)
-        @test(proj_v[acts] == zeros(5))
+        @test(proj_v == sol)
         
     end
 
     @testset "update_active_set" begin
+        n = 10
 
-        index_set = [ ]
-        index_list = [ ]
+        index_set = zeros(Bool, n)
+        index_list = zeros(Bool, n)
+        sol_index = zeros(Bool, n)
         BOBYQA.update_active_set!(index_set, index_list)
-        @test(index_set == [ ])
+        @test(index_set == sol_index)
 
-        index_set = [ ]
-        index_list = [1, 2]
+        index_set = zeros(Bool, n)
+        index_list = zeros(Bool, n)
+        index_list[1] = true
+        index_list[2] = true
+        sol_index = zeros(Bool, n)
+        sol_index[1] = true
+        sol_index[2] = true
         BOBYQA.update_active_set!(index_set, index_list)
-        @test(index_set == [1, 2])
+        @test(index_set == sol_index)
 
-        index_set = [3, 4, 5]
-        index_list = [ ]
+        index_set = zeros(Bool, n)
+        index_set[3] = true
+        index_set[6] = true
+        index_set[8] = true
+        index_list = zeros(Bool, n)
+        sol_index = zeros(Bool, n)
+        sol_index[3] = true
+        sol_index[6] = true
+        sol_index[8] = true
         BOBYQA.update_active_set!(index_set, index_list)
-        @test(index_set == [3, 4, 5])
+        @test(index_set == sol_index)
 
-        index_set = [2, 4, 6]
-        index_list = [7, 9]
+        index_set = zeros(Bool, n)
+        index_set[2] = true
+        index_set[4] = true
+        index_set[6] = true
+        index_list = zeros(Bool, n)
+        index_list[7] = true
+        index_list[9] = true
+        sol_index = zeros(Bool, n)
+        sol_index[2] = true
+        sol_index[4] = true
+        sol_index[6] = true
+        sol_index[7] = true
+        sol_index[9] = true
         BOBYQA.update_active_set!(index_set, index_list)
-        @test(index_set == [2, 4, 6, 7, 9])
+        @test(index_set == sol_index)
 
-        index_set = [1, 2, 3, 4, 5]
-        index_list = [2, 4, 5, 6, 8]
+        index_set = zeros(Bool, n)
+        index_set[1] = true
+        index_set[2] = true
+        index_set[3] = true
+        index_set[4] = true
+        index_set[5] = true
+        index_list = zeros(Bool, n)
+        index_list[2] = true
+        index_list[4] = true
+        index_list[5] = true
+        index_list[6] = true
+        index_list[8] = true
+        sol_index = zeros(Bool, n)
+        sol_index[1] = true
+        sol_index[2] = true
+        sol_index[3] = true
+        sol_index[4] = true
+        sol_index[5] = true
+        sol_index[6] = true
+        sol_index[8] = true
         BOBYQA.update_active_set!(index_set, index_list)
-        @test(index_set == [1, 2, 3, 4, 5, 6, 8])
+        @test(index_set == sol_index)
     
     end
 
@@ -99,11 +155,13 @@
         sg = 1.0
         sGd = 1.0
         sGs = 1.0
+        index_list = zeros(Bool, n)
+        sol_index = zeros(Bool, n)
 
-        α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+        α, index_α = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs, index_list)
         @test(α == - 2.0)
         @test(index_α == 3)
-        @test(index_list == [])
+        @test(index_list == sol_index)
 
         n = 10
         x = ones(n)
@@ -115,11 +173,12 @@
         sg = - 5.0
         sGd = 1.0
         sGs = 1.0
+        index_list = zeros(Bool, n)
 
-        α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+        α, index_α = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs, index_list)
         @test(α == 1.0)
         @test(index_α == 2)
-        @test(length(index_list) == n)
+        @test(sum(index_list) == n)
 
         n = 10
         x = ones(n)
@@ -131,11 +190,12 @@
         sg = - 5.0
         sGd = 1.0
         sGs = 1.0
+        index_list = zeros(Bool, n)
         
-        α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+        α, index_α = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs, index_list)
         @test(α == 1.0)
         @test(index_α == 2)
-        @test(length(index_list) == n)
+        @test(sum(index_list) == n)
 
         n = 10
         x = ones(n)
@@ -147,11 +207,13 @@
         sg = - 2.0
         sGd = 1.0
         sGs = 1.0
+        index_list = zeros(Bool, n)
+        sol_index = zeros(Bool, n)
         
-        α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+        α, index_α = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs, index_list)
         @test(α == 0.0)
         @test(index_α == 1)
-        @test(index_list == [ ])
+        @test(index_list == sol_index)
 
         n = 3
         x = ones(n)
@@ -163,11 +225,13 @@
         sg = - 5.0
         sGd = 1.0
         sGs = 1.0
+        index_list = zeros(Bool, n)
+        sol_index = zeros(Bool, n)
         
-        α, index_α, index_list = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+        α, index_α = BOBYQA.calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs, index_list)
         @test(α == 0.0)
         @test(index_α == 1)
-        @test(index_list == [ ])
+        @test(index_list == sol_index)
 
     end
 
@@ -278,11 +342,13 @@
         pd = ones(n)
         a = ones(n)
         b = 3 * ones(n)
+        index_list = zeros(Bool, n)
+        sol_index = zeros(Bool, n)
 
-        index_list, bool_value = BOBYQA.calculate_theta!(n, x, pd, s, a, b, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, d)
+        bool_value = BOBYQA.calculate_theta!(n, x, pd, s, a, b, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, d, index_list)
         @test(bool_value == false)
         @test(isapprox(d, sqrt(2.0) * ones(n), atol = 1.0e-1))
-        @test(index_list == [ ])
+        @test(index_list == sol_index)
 
         n = 2
         x = ones(n)
@@ -291,11 +357,13 @@
         pd = ones(n)
         a = ones(n)
         b = 3 * ones(n)
+        index_list = zeros(Bool, n)
+        sol_index = zeros(Bool, n)
 
-        index_list, bool_value = BOBYQA.calculate_theta!(n, x, pd, s, a, b, 1.0, - 1.0, 0.0, 0.0, - 1.0, 0.0, 0.0, d)
+        bool_value = BOBYQA.calculate_theta!(n, x, pd, s, a, b, 1.0, - 1.0, 0.0, 0.0, - 1.0, 0.0, 0.0, d, index_list)
         @test(bool_value == true)
         @test(isapprox(d, (cos(pi / 32.0) + sin(pi / 32.0)) * ones(n), atol = 1.0e-1))
-        @test(index_list == [ ])
+        @test(index_list == sol_index)
 
     end
 
