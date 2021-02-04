@@ -49,7 +49,8 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
     grad_xd = zeros(n)
     proj_d = zeros(n)
     proj_grad_xd = zeros(n)
-    index_set = []
+    index_set = zeros(Bool, n)
+    index_list = zeros(Bool, n)
 
     # Set the entries of d to null
     d .= 0.0
@@ -59,7 +60,7 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
     projection_active_set!(- gk, index_set, s)
 
     # Stop Criteria evaluation
-    if length(index_set) == n
+    if sum(index_set) == n
         msg = "All bounds restrictions are active."
         return msg
     end
@@ -78,7 +79,7 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
     while true         
 
         # Computes the index α
-        α, index_α, indexes = calculate_alpha(n, xk, d, s, Δ, a, b, sg, sGd, sGs)
+        α, index_α = calculate_alpha(n, xk, d, s, Δ, a, b, sg, sGd, sGs, index_list)
 
         # Computes the new direction d
         d_old .= d
@@ -133,10 +134,10 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
                     pdGpd = dot(proj_d, Gpd)
 
                     # Calculate the new direction d
-                    indexes, value = calculate_theta!(n, xk, proj_d, s, a, b, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd, d)
+                    value = calculate_theta!(n, xk, proj_d, s, a, b, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd, d, index_list)
 
                     # Updates the set of indexes of the fixed bounds.
-                    update_active_set!(index_set, indexes)
+                    update_active_set!(index_set, index_list)
 
                     # Calculate some curvature information
                     dg = dot(d, gk)
@@ -167,7 +168,7 @@ function trsbox!(n, gk, Gk, xk, Δ, a, b, d)
         if index_α == 2
 
             # Updates the set of indexes of the fixed bounds.
-            update_active_set!(index_set, indexes)
+            update_active_set!(index_set, index_list)
 
             # Computes ∇Q(xk + d), P_I(∇Q(xk + d)) and ||P_I(∇Q(xk + d))||^2     
             grad_xd .= gk .+ Gd
