@@ -15,16 +15,17 @@
     - 'x': n-dimensional vector (current iterate)
     - 'a': n-dimensional vector with the lower bounds
     - 'b': n-dimensional vector with the upper bounds
-    - 'index_set': empty list
+    - 'index_set': boolean array
 
-    Modify index_set to return a list with the indices that are fixed at the bounds
+    Modify index_set to return a boolean array whose entries will have the value "true" for the indexes 
+    that are fixed at the limits 
 
 """
 function active_set!(n, g, x, a, b, index_set)
 
     for i=1:n
         if ( x[i] == a[i] && g[i] >= 0.0 ) || ( x[i] == b[i] && g[i] <= 0.0 )
-            push!(index_set, i)
+            index_set[i] = true
         end
     end
 
@@ -37,19 +38,16 @@ end
     Constructs the projection operator from the set of active constraints
     
     - 'v': n-dimensional vector 
-    - 'index_set': list with the indices of the active constraints
+    - 'index_set': boolean array with the indices of the active constraints
     - 'proj_v': n-dimensional auxiliary vector
 
     Modifies proj_v to become the projection of vector v by the set of active constraints
 
 """
 function projection_active_set!(v, index_set, proj_v)
-    m = length(index_set)
-    copyto!(proj_v, v)
 
-    for i=1:m
-        proj_v[index_set[i]] = 0.0
-    end
+    copyto!(proj_v, v)
+    proj_v[index_set] .= 0.0
 
 end
 
@@ -59,26 +57,21 @@ end
 
     Checks whether the values in index_list are present in index_set and adds values that are not
 
-    - 'index_set': list with the indices of the active constraints
-    - 'index_list': list with the new indices that are active constraints
+    - 'index_set': boolean array with the indices of the active constraints
+    - 'index_list': boolean array with the new indices that are active constraints
 
-    Modify index_set to the new index list
+    Modify index_set to the new index boolean array
 
 """
 function update_active_set!(index_set, index_list)
-    m = length(index_list)
-
-    for i = 1:m
-        if index_list[i] ∉ index_set
-            push!(index_set, index_list[i])
-        end
-    end
+    
+    index_set[index_list] .= true
 
 end
 
 """
 
-    calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+    calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs, index_list)
 
     Determines the stepsize α, which will be the minimum value between α_Δ, α_B and α_Q
 
@@ -92,16 +85,18 @@ end
     - 'sg': pre-calculated value of s'g
     - 'sGd': pre-calculated value of s'Gd
     - 'sGs': pre-calculated value of s'Gs
+    - 'index_list': boolean array
     
-    Returns the real value α, an index that indicates which value was chosen, and a list 
-    of indexes that violate the bound restrictions (in the case α = α_B) or an empty list for the other cases
+    
+    Modifies index_list to become a boolean array with the indexes that violate the bound restrictions 
+    (in the case α = α_B) and, returns the real value α and an index that indicates which value was chosen
 
 """
-function calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
+function calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs, index_list)
     α_values = Inf * ones(3)
     Δ_i = 0.0
     B_i = 0.0
-    index_list = []
+    index_list .= false
 
     # Computes α_Δ and α_B
     for i=1:n
@@ -135,12 +130,12 @@ function calculate_alpha(n, x, d, s, Δ, a, b, sg, sGd, sGs)
     if index_α == 2
         for i = 1:n
             if ((a[i] - x[i] - d[i]) == α * s[i]) || ((b[i] - x[i] - d[i]) == α * s[i])
-                push!(index_list, i)
+                index_list[i] = true
             end
         end
     end
  
-    return α, index_α, index_list
+    return α, index_α
 
 end
 
@@ -285,7 +280,7 @@ end
 
 """
 
-    calculate_theta!(n, x, proj_d, s, a, b, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd, d)
+    calculate_theta!(n, x, proj_d, s, a, b, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd, d, index_list)
 
     Calculate a rotation and a new direction for the case α = α_Δ
 
@@ -303,15 +298,17 @@ end
     - 'sGpd': pre-calculated value of s'Gpd, where pd is the projection of d by I
     - 'pdGpd': pre-calculated value of s'Gpd, where pd is the projection of d by I
     - 'd': n-dimensional vector (direction)
+    - 'index_list': boolean array
 
-    Modifies d to become the new direction and return a boolean value (true if θ == θ_Q, false otherwise)
+    Modifies d to become the new direction and index_list to become a boolean array with the active constraints, 
+    and return a boolean value (true if θ == θ_Q, false otherwise)
 
 """
-function calculate_theta!(n, x, proj_d, s, a, b, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd, d)
+function calculate_theta!(n, x, proj_d, s, a, b, sg, pdg, sGs, dGs, dGpd, sGpd, pdGpd, d, index_list)
     ε = 1.0e-1
     θ_B = 0.0
     θ_Q = 0.0
-    index_list = []
+    index_list .= false
     
     # Computes θ_B
     cond_B(θ) = stop_condition_theta_B(θ, n, x, d, s, proj_d, a, b)
@@ -330,14 +327,14 @@ function calculate_theta!(n, x, proj_d, s, a, b, sg, pdg, sGs, dGs, dGpd, sGpd, 
     # Computes the indexes of the fixed bounds,
     for i = 1:n
         if ((a[i] - x[i]) == d[i]) || ((b[i] - x[i]) == d[i])
-            push!(index_list, i)
+            index_list[i] = true
         end
     end
 
     if θ == θ_B
-        return index_list, false
+        return false
     else
-        return index_list, true
+        return true
     end
 
 end
