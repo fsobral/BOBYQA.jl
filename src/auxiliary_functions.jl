@@ -165,7 +165,7 @@ function new_search_direction!(proj_d, proj_grad, norm2_proj_d, norm2_proj_grad,
         β = - sqrt(norm2_proj_d / norm2_proj_grad)
         v .= β .* proj_grad
     else
-        aux = ((norm2_proj_d ^ 2.0 * norm2_proj_grad) / (pdpg)) - norm2_proj_d
+        aux = ((norm2_proj_d ^ 2.0 * norm2_proj_grad) / (pdpg ^ 2.0)) - norm2_proj_d
         α = - sqrt(aux * norm2_proj_d) / aux
         β = - α * norm2_proj_d / pdpg
 
