@@ -34,7 +34,7 @@ end
 
     correct_initial_guess!(n, Δ, a, b, x)
 
-    Checks whether the limits satisfy the conditions b[i] >= a[i]+2*Δ
+    Modifies the initial guess x to be suitable for the constructions of the algorithm
 
     - 'n': dimension of the search space
     - 'Δ': positive real value (trust-region radius)
@@ -42,7 +42,7 @@ end
     - 'b': n-dimensional vector with the upper bounds
     - 'x': n-dimensional vector (first iterate)
 
-    Returns a n-dimensional vector
+    Modifies the vector x
 
 """
 function correct_initial_guess!(n, Δ, a, b, x)
@@ -63,16 +63,17 @@ end
 
 """
 
-    construct_set!(x0, Δ, a, b, p, set, α_values, β_values)
+    construct_set!(n, Δ, a, b, x, p, set, α_values, β_values)
 
     Partially builds the set of interpolation points of the first model 
     and two vectors with some important constants.
 
-    - 'x0': n-dimensional vector (first iterate)
+    - 'n': dimension of the search space
+    - 'p': integer (number of pairs of points to be generated)
     - 'Δ': positive real value (trust-region radius)
     - 'a': n-dimensional vector with the lower bounds
     - 'b': n-dimensional vector with the upper bounds
-    - 'p': integer (number of pairs of points to be generated)
+    - 'x': n-dimensional vector (first iterate)
     - 'set': n × m matrix (set of interpolation points)
     - 'α_values': n-dimensional vector with some constants related with the first n points
     - 'β_values': n-dimensional vector with some constants related with the last n points
@@ -80,29 +81,28 @@ end
     Returns a modified version of the matrix set and two other vectors.
 
 """
-function construct_set!(x0, Δ, a, b, p, set, α_values, β_values)
-    n = length(x0)
+function construct_set!(n, p, Δ, a, b, x, set, α_values, β_values)
 
     for i=1:p
-        if x0[i] == a[i]
-            set[:, i + 1] = x0
+        if x[i] == a[i]
+            set[:, i + 1] .= x
             set[i, i + 1] += Δ
             α_values[i] = Δ
-            set[:, n + i + 1] = x0
+            set[:, n + i + 1] .= x
             set[i, n + i + 1] += 2.0 * Δ
             β_values[i] = 2.0 * Δ
-        elseif x0[i] == b[i]
-            set[:, i + 1] = x0
-            set[i, i + 1] += -Δ
-            α_values[i] = -Δ
-            set[:, n + i + 1] = x0
-            set[i, n + i + 1] += -2.0 * Δ
-            β_values[i] = -2.0 * Δ
+        elseif x[i] == b[i]
+            set[:, i + 1] .= x
+            set[i, i + 1] += - Δ
+            α_values[i] = - Δ
+            set[:, n + i + 1] .= x
+            set[i, n + i + 1] += - 2.0 * Δ
+            β_values[i] = - 2.0 * Δ
         else
-            set[:, i + 1] = x0
+            set[:, i + 1] .= x
             set[i, i + 1] += Δ
             α_values[i] = Δ
-            set[:, n + i + 1] = x0
+            set[:, n + i + 1] .= x
             set[i, n + i + 1] += -Δ
             β_values[i] = -Δ
         end
