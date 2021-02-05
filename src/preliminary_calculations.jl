@@ -131,18 +131,18 @@ end
 """
 function construct_set_aux!(q, Δ, a, b, index_center, set, α_values, β_values)
 
-    if x0[q] == a[q]
-        set[:, q + 1] = x0
+    if set[q, index_center] == a[q]
+        set[:, q + 1] .= set[:, index_center]
         set[q, q + 1] += Δ
         α_values[q] = Δ
         β_values[q] = 0.0
-    elseif x0[p] == b[p]
-        set[:, q + 1] = x0
-        set[q, q + 1] += -Δ
-        α_values[q] = -Δ
+    elseif set[q, index_center] == b[p]
+        set[:, q + 1] .= set[:, index_center]
+        set[q, q + 1] += - Δ
+        α_values[q] = - Δ
         β_values[q] = 0.0
     else
-        set[:, q + 1] = x0
+        set[:, q + 1] .= set[:, index_center]
         set[q, q + 1] += Δ
         α_values[q] = Δ
         β_values[q] = 0.0
