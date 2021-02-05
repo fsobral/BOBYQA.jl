@@ -91,4 +91,23 @@
 
     end
 
+    @testset "Exit condition: α_Δ with θ_Q criterion" begin
+        
+        n = 2    
+        g = 5.0 * ones(n)
+        G = [10.0 0.0; -5.0 1.0]
+        x = zeros(n)
+        Δ = 0.5
+        a = - 10.0 * ones(n)
+        b = 10.0 * ones(n)
+        d = rand(n)
+
+        msg = BOBYQA.trsbox!(n, g, G, x, Δ, a, b, d)
+
+        sol_d = [- 1.0 / 3.0, - 1000.0 / 1603.0]
+        @test(isapprox(d, sol_d, atol = 1.0e-1))
+        @test(msg == "Stopping criterion for α_Δ with the choice of θ_Q has been reached")
+
+    end
+
 end
