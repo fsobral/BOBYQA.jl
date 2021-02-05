@@ -63,7 +63,7 @@ end
 
 """
 
-    construct_set!(n, Δ, a, b, x, p, set, α_values, β_values)
+    construct_set!(n, p, Δ, a, b, index_center, set, α_values, β_values)
 
     Partially builds the set of interpolation points of the first model 
     and two vectors with some important constants.
@@ -73,7 +73,7 @@ end
     - 'Δ': positive real value (trust-region radius)
     - 'a': n-dimensional vector with the lower bounds
     - 'b': n-dimensional vector with the upper bounds
-    - 'x': n-dimensional vector (first iterate)
+    - 'index_center': integer (index of the current trust-region center point)
     - 'set': n × m matrix (set of interpolation points)
     - 'α_values': n-dimensional vector with some constants related with the first n points
     - 'β_values': n-dimensional vector with some constants related with the last n points
@@ -81,30 +81,30 @@ end
     Returns a modified version of the matrix set and two other vectors.
 
 """
-function construct_set!(n, p, Δ, a, b, x, set, α_values, β_values)
+function construct_set!(n, p, Δ, a, b, index_center, set, α_values, β_values)
 
     for i=1:p
-        if x[i] == a[i]
-            set[:, i + 1] .= x
+        if set[i, index_center] == a[i]
+            set[:, i + 1] .= set[:, index_center]
             set[i, i + 1] += Δ
             α_values[i] = Δ
-            set[:, n + i + 1] .= x
+            set[:, n + i + 1] .= set[:, index_center]
             set[i, n + i + 1] += 2.0 * Δ
             β_values[i] = 2.0 * Δ
-        elseif x[i] == b[i]
-            set[:, i + 1] .= x
+        elseif set[i, index_center] == b[i]
+            set[:, i + 1] .= set[:, index_center]
             set[i, i + 1] += - Δ
             α_values[i] = - Δ
-            set[:, n + i + 1] .= x
+            set[:, n + i + 1] .= set[:, index_center]
             set[i, n + i + 1] += - 2.0 * Δ
             β_values[i] = - 2.0 * Δ
         else
-            set[:, i + 1] .= x
+            set[:, i + 1] .= set[:, index_center]
             set[i, i + 1] += Δ
             α_values[i] = Δ
-            set[:, n + i + 1] .= x
-            set[i, n + i + 1] += -Δ
-            β_values[i] = -Δ
+            set[:, n + i + 1] .= set[:, index_center]
+            set[i, n + i + 1] += - Δ
+            β_values[i] = - Δ
         end
     end
 
@@ -112,16 +112,16 @@ end
 
 """
 
-    construct_set_aux!(x0, Δ, a, b, q, set, α_values, β_values)
+    construct_set_aux!(q, Δ, a, b, index_center, set, α_values, β_values)
 
     Changes the qth point of the set of interpolation points and the qth value of the 
     vectors α_values and β_values
 
-    - 'x0': n-dimensional vector (first iterate)
+    - 'q': point index to be changed
     - 'Δ': positive real value (trust-region radius)
     - 'a': n-dimensional vector with the lower bounds
     - 'b': n-dimensional vector with the upper bounds
-    - 'q': point index to be changed
+    - 'index_center': integer (index of the current trust-region center point)
     - 'set': n × m matrix (set of interpolation points)
     - 'α_values': n-dimensional vector with some constants related with the first n points
     - 'β_values': n-dimensional vector with some constants related with the last n points
@@ -129,7 +129,7 @@ end
     Returns a modified version of the matrix set and two other vectors.
 
 """
-function construct_set_aux!(x0, Δ, a, b, q, set, α_values, β_values)
+function construct_set_aux!(q, Δ, a, b, index_center, set, α_values, β_values)
 
     if x0[q] == a[q]
         set[:, q + 1] = x0
