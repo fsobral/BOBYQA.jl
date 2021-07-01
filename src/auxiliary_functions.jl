@@ -406,3 +406,36 @@ function stopping_criterion_35(proj_d, proj_grad, norm2_proj_d, norm2_proj_grad,
         return false
     end
 end
+
+"""
+
+    select_t_altmov(xk, set)
+
+    Evaluates the distances between the current iterate and the other sample points and 
+    selects the index relative to the greatest distance
+
+    - 'x': n-dimensional vector (current iterate)
+    - 'set': n × m matrix (set of interpolation points)
+    
+    Returns the t index relative to the greatest distance
+
+"""
+function select_t_altmov(x, set)
+    
+    m = size(set)[2]
+    max_dist = -1.0
+    dist = -1.0
+    t = nothing
+
+    for i = 1:m
+        dist = norm(set[:, i] - x)
+
+        if dist > max_dist
+            max_dist = dist
+            t = i
+        end
+    end
+
+    return t
+
+end
