@@ -15,5 +15,6 @@ include("bobyqa_types.jl")
 
 include("auxiliary_functions.jl")
 include("trsbox.jl")
+include("altmov.jl")
 
 end
