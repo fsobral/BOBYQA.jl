@@ -439,3 +439,56 @@ function select_t_altmov(x, set)
     return t
 
 end
+
+function construct_altmov_cauchy!(n, xk, ∇Λ , Δ, a, b, w)
+
+    # Initializes some variables and vectors
+    set_s = zeros(Bool, n)
+    w_free = 0.0
+    w_fixed = 0.0
+    aux = 0.0
+
+    # Defines the initial set S and the values of w_free (note that w_fixed is zero for the first iteration)
+    for i = 1:n
+        if w[i] == 0.0
+            set_s[i] = true
+        else
+            w_free += ∇Λ[i] ^ 2.0
+        end
+    end
+
+    while true
+
+        # Calculates μ
+        μ = sqrt( ( Δ ^ 2.0 - w_fixed ) / w_free )
+
+        # Checks whether the point xk + s satisfies the box constraints
+        cond = true
+        for i = 1:n
+            if ( ! set_s[i] )
+                aux = xk[i] - μ * ∇Λ[i]
+                if ( a[i] > aux ) || ( aux > b[i] )
+                    cond = false
+                    set_s[i] = true
+                    w_free -= ∇Λ[i] ^ 2.0
+                    w_fixed += w[i] ^ 2.0
+                end
+            end
+        end
+
+        # If the box constraints are satisfied, returns the solution s
+        if cond
+            for i = 1:n
+                if (! set_s[i])
+                    w[i] = - μ * ∇Λ[i]
+                end
+            end
+
+            println( "Tudo ok" )
+            
+            break
+
+        end
+
+    end
+end
