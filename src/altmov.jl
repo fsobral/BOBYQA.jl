@@ -57,7 +57,7 @@ function altmov!(n, m, xk, xo, ik, t, BMAT, ZMAT, Δ, a, b, d, c)
     # Calculates the lambda values and the gradient of the t-th Lagrange function ∇Λ_{t}(x_{k})
     for i = 1:m
         λ_vec[i] = dot(ZMAT[t, :], ZMAT[i, :])
-        grad_lag .+= (λ_vec[i] + dot(set[:, i], dif)) * (set[:, i] - xo) 
+        grad_lag .+= λ_vec[i] * dot(set[:, i], dif) * (set[:, i] - xo) 
     end
     
     # Calculates the "Usual" Alternative Step d
@@ -136,6 +136,6 @@ function altmov!(n, m, xk, xo, ik, t, BMAT, ZMAT, Δ, a, b, d, c)
 
     # Calculates the "Cauchy" Alternative Step c
 
-    
+
 
 end
