@@ -31,6 +31,8 @@ function altmov!(n, m, xk, xo, ik, t, BMAT, ZMAT, Δ, a, b, d, c)
     # Initializes some variables and vectors
     λ_vec = zeros(m)
     grad_lag = zeros(n)
+    w = zeros(n)
+    c2 = zeros(n)
     dif = xk - xo
     dif_grad_lag = 0.0
     dif_hess_lag_dif = 0.0
@@ -136,6 +138,59 @@ function altmov!(n, m, xk, xo, ik, t, BMAT, ZMAT, Δ, a, b, d, c)
 
     # Calculates the "Cauchy" Alternative Step c
 
+    w .= 0.0
+    for i = 1:n
+        if grad_lag[i] > 0.0
+            w[i] = a[i] - xk[i]
+        elseif grad_lag[i] < 0.0
+            w[i] = b[i] - xk[i]
+        end
+    end
 
+    if norm(w) <= Δ
+        c .= w
+    else
+        construct_altmov_cauchy!(n, xk, grad_lag, Δ, a, b, w)
+        c .= w
+    end
+
+    w .= 0.0
+    for i = 1:n
+        if grad_lag[i] < 0.0
+            w[i] = a[i] - xk[i]
+        elseif grad_lag[i] > 0.0
+            w[i] = b[i] - xk[i]
+        end
+    end
+
+    if norm(w) <= Δ
+        c2 .= w
+    else
+        construct_altmov_cauchy!(n, xk, -grad_lag, Δ, a, b, w)
+        c2 .= w
+    end
+
+    # Calculates which Cauchy step results in the highest value of |Λ_{t}(x_{k} + c)|
+
+    dif_grad_lag = dot(c, grad_lag)
+    dif_hess_lag_dif = 0.0
+    for i = 1:m
+        dif_hess_lag_dif += λ_vec[i] * dot(c, set[:, j] - xo) ^ 2.0
+    end
+    Λ_xk_c = dif_grad_lag + 0.5 * dif_hess_lag_dif
+
+    dif_grad_lag = dot(c2, grad_lag)
+    dif_hess_lag_dif = 0.0
+    for i = 1:m
+        dif_hess_lag_dif += λ_vec[i] * dot(c2, set[:, j] - xo) ^ 2.0
+    end
+    Λ_xk_c2 = dif_grad_lag + 0.5 * dif_hess_lag_dif
+
+    if abs(Λ_xk_c2) > abs(Λ_xk_c)
+        c .= c2
+        Λ_xk_c = Λ_xk_c2
+    end
+    
+    return Λ_xk_d, Λ_xk_c
 
 end
