@@ -36,20 +36,10 @@ function altmov!(n, m, xk, xo, ik, t, BMAT, ZMAT, Δ, a, b, d, c)
     dif = xk - xo
     dif_grad_lag = 0.0
     dif_hess_lag_dif = 0.0
-    α_vertex = nothing
-    α_lower = nothing
-    α_upper = nothing
-    α_j = nothing
-    ϕ_α_vertex = nothing
-    ϕ_α_lower = nothing
-    ϕ_α_upper = nothing
-    ϕ_α_j = nothing
     best_j = 0
-    best_α = nothing
-    best_ϕ = nothing
-    cond_α = nothing
-    best_cond = nothing
-    Λ_xk_d = nothing
+    best_α = 0.0
+    best_ϕ = 0.0
+    best_cond = 0.0
 
     # Saves g entries from BMAT matrix
     for i = 1:n
@@ -59,7 +49,7 @@ function altmov!(n, m, xk, xo, ik, t, BMAT, ZMAT, Δ, a, b, d, c)
     # Calculates the lambda values and the gradient of the t-th Lagrange function ∇Λ_{t}(x_{k})
     for i = 1:m
         λ_vec[i] = dot(ZMAT[t, :], ZMAT[i, :])
-        grad_lag .+= λ_vec[i] * dot(set[:, i], dif) * (set[:, i] - xo) 
+        grad_lag .+= λ_vec[i] * dot(set[:, i] - xo, dif) * (set[:, i] - xo) 
     end
     
     # Calculates the "Usual" Alternative Step d
@@ -123,7 +113,7 @@ function altmov!(n, m, xk, xo, ik, t, BMAT, ZMAT, Δ, a, b, d, c)
 
         # Compares the best α_j so far
         cond_α = ( ϕ_α_j ^ 2.0 ) * ( 0.5 * λ_vec[t] * α_j ^ 2.0 * (1.0 - α_j) ^ 2.0 * norm(dif) ^ 4.0 + ϕ_α_j ^ 2.0 )
-        if ( best_α === nothing ) || ( cond_α > best_cond )
+        if ( best_j == 0 ) || ( cond_α > best_cond )
             best_j = j
             best_α = α_j
             best_ϕ = ϕ_α_j
